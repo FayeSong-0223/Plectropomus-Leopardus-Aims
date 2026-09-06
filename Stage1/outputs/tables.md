@@ -50,3 +50,36 @@ mixed model with a site random intercept. 95% Wald intervals.
 
 Adjusting for wave exposure does not explain the regional difference. If anything
 the Whitsunday estimates increase slightly once exposure is accounted for.
+
+## Table 4 — Protection effect across four specifications (Step 2)
+
+Density ratio against fished sites in the same region, 95% Wald intervals.
+`base` = Step 1; `+hab` adds habitat; `+env` is Model A; `sat` is Model B.
+
+| Region | Protection | base | +hab | +env (A) | sat (B) |
+|---|---|---|---|---|---|
+| Palm | NTR 1987 | 1.17 | 1.29 | 1.26 | 1.27 |
+| Palm | NTR 2004 | 0.96 | 1.18 | 0.95 | 0.95 |
+| Whitsunday | NTR 1987 | 3.59 | 3.12 | 3.21 | 3.23 |
+| Whitsunday | NTR 2004 | 3.53 | 2.81 | 2.89 | 2.90 |
+
+Every Palm interval spans 1 in every specification. Every Whitsunday interval
+excludes 1 in every specification. Adding habitat lowers the Whitsunday estimates
+by 10–20%, after which they are stable.
+
+## Table 5 — Variance decomposition on the link scale (Model A)
+
+Unique share of linear-predictor variance.
+
+| Block | Unique share |
+|---|---:|
+| Management | 0.481 |
+| Space/time | 0.121 |
+| Environment | 0.109 |
+| Site (random effect) | 0.089 |
+| Habitat | 0.047 |
+
+Unique shares sum to 0.847; the remaining 0.153 is shared between blocks. The
+largest shared component is Environment with Space/time (0.038), which is the
+expected consequence of thermal covariates and year both varying at region-year
+level.

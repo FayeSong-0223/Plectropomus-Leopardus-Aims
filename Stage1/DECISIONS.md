@@ -50,3 +50,25 @@ Step 1 used a single `factor(YEAR)` shared across regions. Residuals by region-y
 Palm 2007–2012 above it, while Whitsunday does not follow the same pattern. The two
 regions have different temporal trajectories and a shared year term cannot represent
 them. Prompted by a diagnostic, not by an effect estimate.
+
+**2026-09-06 — Two models fitted rather than one, to resolve a genuine conflict.**
+Step 1's diagnostics required region-specific year effects. But region-year fixed
+effects absorb 99% of `maxDHW`'s variance, making a thermal effect inestimable.
+Rather than choose silently: Model A uses region-specific *smooth* year trends,
+leaving year-to-year deviation available to the environmental covariates; Model B
+saturates time with region-year as a factor and drops the thermal terms as
+unidentifiable. Environmental effects are read from A only, protection from both.
+The two agree on protection to two decimal places.
+
+**2026-09-06 — Thermal sensitivity check added after seeing the fitted curve.**
+`s(maxDHW)` was the strongest environmental term, but the fitted curve *rose* above
+about 4 degree heating weeks, which would mean heat stress increases coral trout
+density. The rug showed a gap between 4 and 5.8 DHW, and Whitsunday 2017 is the only
+region-year above 4 (41 of 467 observations). Model A was refitted without that
+survey. This is a change prompted by an implausible fitted shape and a data-coverage
+gap — a model-adequacy problem — not by an effect estimate being the wrong size.
+
+Result: the dip at moderate thermal stress survives removal and is if anything
+deeper. The rising upper limb does not survive and is a boundary artefact in both
+fits. Conclusion recorded: a negative association at moderate DHW is defensible;
+nothing about the high end is identified and it must not be quoted.
