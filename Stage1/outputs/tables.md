@@ -90,9 +90,9 @@ Range of each estimate across 13 refits, each omitting one region-year.
 
 | Quantity | Full data | Range across 13 refits |
 |---|---:|---|
-| Whitsunday NTR 1987 (ratio) | 3.21 | 2.91 – 3.40 |
-| Whitsunday NTR 2004 (ratio) | 2.89 | 2.63 – 3.10 |
-| Palm NTR 1987 (ratio) | 1.26 | 1.16 – 1.30 |
+| Whitsunday NTR 1987 (ratio) | 3.21 | 2.88 – 3.38 |
+| Whitsunday NTR 2004 (ratio) | 2.89 | 2.59 – 3.09 |
+| Palm NTR 1987 (ratio) | 1.26 | 1.16 – 1.31 |
 | s(maxDHW) p-value | <0.001 | <0.001 – <0.001 |
 | s(kd490) p-value | 0.014 | 0.005 – 0.126 |
 | s(rugosity) p-value | 0.097 | 0.021 – 0.192 |
@@ -170,13 +170,60 @@ boundary artefact at the high end.
 
 Inverse-distance weights, 4999 permutations, tested within region.
 
+Single-seed values (seed 1), **superseded by Table 11** — these depend on the
+randomisation in the quantile residuals.
+
 | Region | Sites | Moran's I | Expected | p | Median separation |
 |---|---:|---:|---:|---:|---:|
 | Palm | 30 | 0.011 | −0.034 | 0.878 | 5.4 km |
-| **Whitsunday** | 41 | **0.146** | −0.025 | **0.007** | 8.9 km |
+| Whitsunday | 41 | 0.146 | −0.025 | 0.007 | 8.9 km |
 
-The site random effect has not absorbed the spatial signal in Whitsunday. A spatial
-term would be justified there. Documented, not acted on — see `DECISIONS.md`.
+## Table 11 — Seed stability of the residual diagnostics (Step 5)
+
+Randomised quantile residuals draw from a uniform, so every diagnostic built on them
+depends on the seed. Twenty seeds:
+
+| | Range | Median | p < 0.05 |
+|---|---|---:|---|
+| Whitsunday Moran's I | 0.079 – 0.167 | 0.114 | 11 of 20 |
+| Palm Moran's I | −0.055 – 0.026 | −0.017 | 0 of 20 |
+| Shapiro–Wilk on residuals | p 0.298 – 0.995 | — | 0 of 20 rejected |
+
+**Correction.** Table 9's single-seed result overstated the Whitsunday finding. What is
+defensible: Moran's I is positive in Whitsunday under every seed and near zero in Palm
+under every seed, but the Whitsunday value is not significant at conventional thresholds
+under half of them. Residual normality, by contrast, is robust.
+
+## Table 12 — Depth specification (Step 5)
+
+| Specification | AIC | Deviance explained | Whitsunday NTR 1987 |
+|---|---:|---:|---|
+| depth as a smooth | 2353.1 | 60.2% | 3.21 (2.28–4.52) |
+| **depth linear (used)** | 2353.0 | 60.2% | 3.21 (2.28–4.52) |
+| depth omitted | 2354.1 | 59.3% | 3.62 (2.62–4.99) |
+
+Depth is constant within every site here, so a penalised smooth of it was fully aliased
+with the site random effect (concurvity 1.000). The linear form gives identical estimates
+with no aliasing. Omitting it raises the Whitsunday estimate, so it is kept.
+
+## Concurvity (Step 5)
+
+Worst-case concurvity against the rest of the model:
+
+| Term | Worst |
+|---|---:|
+| s(SITE) | 1.000 |
+| s(maxDHW) | 0.951 |
+| s(kd490) | 0.926 |
+| s(YEAR):Whitsunday | 0.914 |
+| s(YEAR):Palm | 0.879 |
+| s(LHC) | 0.750 |
+| s(Cyclone) | 0.655 |
+| s(rugosity) | 0.644 |
+
+The thermal and turbidity smooths are substantially reproducible from the year trends.
+Their coefficients are one possible split of shared variation, not independently
+identified effects.
 
 ## Table 10 — Habitat effects split within and between sites (Step 4)
 

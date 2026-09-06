@@ -58,8 +58,8 @@ d$Cyclone_lag <- ave(d$Cyclone, d$SITE, FUN = function(z) c(NA, z[-length(z)]))
 say("lagged cyclone constructed (previous survey at the same site); ",
     sum(is.na(d$Cyclone_lag)), " first-visit rows have no lag")
 
-FORM <- count ~ REGION * NTR + EXPOSURE + s(YEAR, by = REGION, k = 5) +
-  s(rugosity, k = 5) + s(LHC, k = 5) + s(depth, k = 5) +
+FORM <- count ~ REGION * NTR + EXPOSURE + depth + s(YEAR, by = REGION, k = 5) +
+  s(rugosity, k = 5) + s(LHC, k = 5) +
   s(kd490, k = 5) + s(maxDHW, k = 5) + s(Cyclone, k = 5) + s(SITE, bs = "re")
 
 fitA <- function(dat, form = FORM)
@@ -138,8 +138,8 @@ say("sites in the sheltered stratum:"); cap(tabsh)
 say("\nNote how thin Whitsunday's fished arm is. The restriction removes the")
 say("confound but leaves few fished sites to compare against.\n")
 
-FORM_SH <- count ~ REGION * NTR + s(YEAR, by = REGION, k = 5) +
-  s(rugosity, k = 5) + s(LHC, k = 5) + s(depth, k = 5) +
+FORM_SH <- count ~ REGION * NTR + depth + s(YEAR, by = REGION, k = 5) +
+  s(rugosity, k = 5) + s(LHC, k = 5) +
   s(kd490, k = 5) + s(maxDHW, k = 5) + s(Cyclone, k = 5) + s(SITE, bs = "re")
 mSh <- fitA(dsh, FORM_SH)
 say("sheltered-only model: n = ", nrow(dsh), ", sites = ", nlevels(dsh$SITE),
@@ -150,8 +150,8 @@ say("sheltered-only model: n = ", nrow(dsh), ", sites = ", nlevels(dsh$SITE),
 # 4. EACH REGION SEPARATELY
 # ---------------------------------------------------------------------
 rule("4. REGIONS FITTED SEPARATELY")
-FORM_R <- count ~ NTR + EXPOSURE + s(YEAR, k = 5) +
-  s(rugosity, k = 5) + s(LHC, k = 5) + s(depth, k = 5) +
+FORM_R <- count ~ NTR + EXPOSURE + depth + s(YEAR, k = 5) +
+  s(rugosity, k = 5) + s(LHC, k = 5) +
   s(kd490, k = 5) + s(maxDHW, k = 5) + s(Cyclone, k = 5) + s(SITE, bs = "re")
 mPalm <- fitA(droplevels(d[d$REGION == "Palm", ]), FORM_R)
 mWhit <- fitA(droplevels(d[d$REGION == "Whitsunday", ]), FORM_R)
@@ -186,8 +186,8 @@ if (!is.null(mLag)) {
   cap(round(summary(mLag)$s.table[c("s(Cyclone)", "s(Cyclone_lag)"), , drop = FALSE], 4))
 }
 
-mTw <- tryCatch(gam(pms.leop ~ REGION * NTR + EXPOSURE + s(YEAR, by = REGION, k = 5) +
-                      s(rugosity, k = 5) + s(LHC, k = 5) + s(depth, k = 5) +
+mTw <- tryCatch(gam(pms.leop ~ REGION * NTR + EXPOSURE + depth + s(YEAR, by = REGION, k = 5) +
+                      s(rugosity, k = 5) + s(LHC, k = 5) +
                       s(kd490, k = 5) + s(maxDHW, k = 5) + s(Cyclone, k = 5) +
                       s(SITE, bs = "re"),
                     family = tw(), data = d, method = "REML"), error = function(e) NULL)

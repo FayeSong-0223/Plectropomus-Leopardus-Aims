@@ -78,15 +78,15 @@ say("Smooth basis dimension is held to k = 5 throughout. Palm has only six surve
 say("years, so anything larger invites a wiggly fit the data cannot support.")
 say("Effective degrees of freedom are reported so over-fitting is visible.\n")
 
-mA <- gam(count ~ REGION * NTR + EXPOSURE +
+mA <- gam(count ~ REGION * NTR + EXPOSURE + depth +
             s(YEAR, by = REGION, k = 5) +
-            s(rugosity, k = 5) + s(LHC, k = 5) + s(depth, k = 5) +
+            s(rugosity, k = 5) + s(LHC, k = 5) +
             s(kd490, k = 5) + s(maxDHW, k = 5) + s(Cyclone, k = 5) +
             s(SITE, bs = "re"),
           family = nb(), data = d, method = "REML")
 
-mB <- gam(count ~ REGION * NTR + EXPOSURE + RY +
-            s(rugosity, k = 5) + s(LHC, k = 5) + s(depth, k = 5) +
+mB <- gam(count ~ REGION * NTR + EXPOSURE + depth + RY +
+            s(rugosity, k = 5) + s(LHC, k = 5) +
             s(kd490, k = 5) + s(Cyclone, k = 5) +
             s(SITE, bs = "re"),
           family = nb(), data = d, method = "REML")
@@ -113,10 +113,10 @@ rule("3. IS THE PROTECTION EFFECT STABLE?")
 say("The estimate is worth little if it moves with every change of specification.")
 say("Four models are compared, from the Step 1 baseline to the fully adjusted fits.\n")
 
-m0 <- gam(count ~ REGION * NTR + EXPOSURE + factor(YEAR) + s(SITE, bs = "re"),
+m0 <- gam(count ~ REGION * NTR + EXPOSURE + depth + factor(YEAR) + s(SITE, bs = "re"),
           family = nb(), data = d, method = "REML")
-mH <- gam(count ~ REGION * NTR + EXPOSURE + factor(YEAR) +
-            s(rugosity, k = 5) + s(LHC, k = 5) + s(depth, k = 5) + s(SITE, bs = "re"),
+mH <- gam(count ~ REGION * NTR + EXPOSURE + depth + factor(YEAR) +
+            s(rugosity, k = 5) + s(LHC, k = 5) + s(SITE, bs = "re"),
           family = nb(), data = d, method = "REML")
 
 rr <- function(m, region, level) {
@@ -155,7 +155,7 @@ tm <- predict(mA, type = "terms")
 cn <- colnames(tm)
 blk <- list(
   Management  = grep("NTR", cn, value = TRUE),
-  Habitat     = grep("s\\((rugosity|LHC|depth)\\)", cn, value = TRUE),
+  Habitat     = unique(c(grep("s\\((rugosity|LHC)\\)", cn, value = TRUE), grep("^depth$", cn, value = TRUE))),
   Environment = grep("s\\((kd490|maxDHW|Cyclone)\\)", cn, value = TRUE),
   `Space/time`= c(grep("^REGION$|s\\(YEAR\\)", cn, value = TRUE),
                   grep("YEAR", cn, value = TRUE), grep("^EXPOSURE$", cn, value = TRUE)),
@@ -193,8 +193,8 @@ rule("5. FIGURES")
 ## Figure 6 — partial effects
 png(file.path(OUT, "fig6_partial_effects.png"), width = 2100, height = 1400, res = 220)
 par(mfrow = c(2, 3), mar = c(3.6, 3.8, 2.4, 0.8)); base_par()
-sm <- c("s(rugosity)", "s(LHC)", "s(depth)", "s(kd490)", "s(maxDHW)", "s(Cyclone)")
-lab <- c("Rugosity index", "Live hard coral (%)", "Depth (m)",
+sm <- c("s(rugosity)", "s(LHC)", "s(kd490)", "s(maxDHW)", "s(Cyclone)")
+lab <- c("Rugosity index", "Live hard coral (%)",
          "kd490 (turbidity)", "Max degree heating weeks", "Cyclone exposure index")
 st <- summary(mA)$s.table
 for (i in seq_along(sm)) {
@@ -282,9 +282,9 @@ cap(round(dhw_ry[dhw_ry > 4], 2))
 say("\nn observations above 4 DHW: ", sum(d$maxDHW > 4), " of ", nrow(d))
 
 d2 <- droplevels(d[!(d$REGION == "Whitsunday" & d$YEAR == 2017), ])
-mA2 <- gam(count ~ REGION * NTR + EXPOSURE +
+mA2 <- gam(count ~ REGION * NTR + EXPOSURE + depth +
              s(YEAR, by = REGION, k = 5) +
-             s(rugosity, k = 5) + s(LHC, k = 5) + s(depth, k = 5) +
+             s(rugosity, k = 5) + s(LHC, k = 5) +
              s(kd490, k = 5) + s(maxDHW, k = 5) + s(Cyclone, k = 5) +
              s(SITE, bs = "re"),
            family = nb(), data = d2, method = "REML")

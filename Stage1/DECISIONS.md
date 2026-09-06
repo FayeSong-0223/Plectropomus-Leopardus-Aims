@@ -118,3 +118,36 @@ and a spatial term would be justified there. This is left as a documented findin
 rather than fixed, because adding a spatial field is the first item section 13 cuts
 and doing it now would be a substantial scope change made at the end of the project.
 It goes to the top of any version two.
+
+**2026-09-06 — Full review found five things, three of them real problems.**
+
+*Corrected.* The Moran's I result was seed-dependent. Randomised quantile residuals draw
+from a uniform, every script fixed `set.seed(1)`, and no second randomisation was ever
+checked. Across 20 seeds Whitsunday's I ranges 0.079–0.167 and the permutation p falls
+below 0.05 in 11 of 20; seed 1 sat near the top. The claim has been downgraded from
+"spatial structure detected" to "consistently positive, not established". Palm is near
+zero and never significant under any seed, so the *contrast* between regions holds.
+
+*Corrected.* `s(depth)` had concurvity 1.000 with the site random effect, because depth
+is constant within every site in this subset. Depth is now a linear term: identical
+estimates, AIC 2353.0 vs 2353.1, no aliasing — the smooth had already collapsed to a
+straight line (edf 1.005). Omitting depth raises the Whitsunday estimate to 3.62, so it
+is doing real adjustment work and is kept.
+
+*Corrected.* The report quoted Whitsunday rugosity moving 3.63 to 3.77 between 2016 and
+2017. The correct values are 3.58 and 3.72. The point being made — that structural
+complexity did not fall while coral cover halved — is unaffected.
+
+*Newly reported, not previously computed.* Concurvity was never checked. Worst-case
+values are 0.951 for the thermal smooth and 0.926 for turbidity against the
+region-specific year trends, which quantifies a confounding that had only been described
+qualitatively.
+
+*Newly reported, not previously computed.* Basis dimension was never checked. k.check
+flags the year smooths and kd490. For the year smooths this cannot be fixed by raising k
+(Palm has six distinct years) and Model B is the specification that answers it; for
+kd490 it is a genuine limitation.
+
+Verified and unchanged: every headline figure was recomputed independently from the raw
+CSVs by a separate code path, and all 30-plus matched. A clean end-to-end run of all six
+scripts reproduces all 20 tables and logs byte for byte, with no warnings.

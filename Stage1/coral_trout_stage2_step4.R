@@ -52,8 +52,8 @@ d$NTR      <- factor(d$NTR,      levels = c("Fished", "NTR 1987", "NTR 2004"))
 d$EXPOSURE <- factor(d$EXPOSURE, levels = c("Sheltered", "Semi-Exposed", "Exposed"))
 d$SITE     <- factor(d$SITE); d$RY <- factor(paste(d$REGION, d$YEAR))
 
-mA <- gam(count ~ REGION * NTR + EXPOSURE + s(YEAR, by = REGION, k = 5) +
-            s(rugosity, k = 5) + s(LHC, k = 5) + s(depth, k = 5) +
+mA <- gam(count ~ REGION * NTR + EXPOSURE + depth + s(YEAR, by = REGION, k = 5) +
+            s(rugosity, k = 5) + s(LHC, k = 5) +
             s(kd490, k = 5) + s(maxDHW, k = 5) + s(Cyclone, k = 5) +
             s(SITE, bs = "re"),
           family = nb(), data = d, method = "REML")
@@ -221,7 +221,7 @@ write.csv(dict, file.path(OUT, "table1_variable_dictionary.csv"), row.names = FA
 rule("4. VARIANCE DECOMPOSITION, UNIQUE AND SHARED")
 tm <- predict(mA, type = "terms"); cn <- colnames(tm)
 blk <- list(Management = grep("NTR", cn, value = TRUE),
-            Habitat    = grep("s\\((rugosity|LHC|depth)\\)", cn, value = TRUE),
+            Habitat    = unique(c(grep("s\\((rugosity|LHC)\\)", cn, value = TRUE), grep("^depth$", cn, value = TRUE))),
             Environment= grep("s\\((kd490|maxDHW|Cyclone)\\)", cn, value = TRUE),
             `Space/time`= unique(c(grep("^REGION$|^EXPOSURE$", cn, value = TRUE),
                                    grep("YEAR", cn, value = TRUE))),
@@ -314,10 +314,10 @@ for (v in c("rugosity", "LHC")) {
 say("depth is site-constant in this subset (varies at 0 of 71 sites), so it has no")
 say("within-site component and is left unsplit.\n")
 
-mM <- gam(count ~ REGION * NTR + EXPOSURE + s(YEAR, by = REGION, k = 5) +
+mM <- gam(count ~ REGION * NTR + EXPOSURE + depth + s(YEAR, by = REGION, k = 5) +
             s(rugosity_bw, k = 5) + s(rugosity_wi, k = 5) +
             s(LHC_bw, k = 5) + s(LHC_wi, k = 5) +
-            s(depth, k = 5) + s(kd490, k = 5) + s(maxDHW, k = 5) +
+            s(kd490, k = 5) + s(maxDHW, k = 5) +
             s(Cyclone, k = 5) + s(SITE, bs = "re"),
           family = nb(), data = d, method = "REML")
 say("Mundlak model: deviance explained ", sprintf("%.1f%%", summary(mM)$dev.expl * 100),
