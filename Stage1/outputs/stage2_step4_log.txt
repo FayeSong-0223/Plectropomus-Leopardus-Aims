@@ -28,10 +28,10 @@ effect across the range the data actually cover.
 
 protection contrasts on the same ratio scale, for comparison:
                        covariate p10 p90 ratio    lo    hi pct_change
-1       Palm, NTR 1987 vs fished  NA  NA 1.256 0.879 1.796       +26%
+1       Palm, NTR 1987 vs fished  NA  NA 1.257 0.879 1.796       +26%
 2       Palm, NTR 2004 vs fished  NA  NA 0.952 0.544 1.666        -5%
-3 Whitsunday, NTR 1987 vs fished  NA  NA 3.212 2.284 4.517      +221%
-4 Whitsunday, NTR 2004 vs fished  NA  NA 2.888 1.989 4.195      +189%
+3 Whitsunday, NTR 1987 vs fished  NA  NA 3.212 2.284 4.516      +221%
+4 Whitsunday, NTR 2004 vs fished  NA  NA 2.888 1.988 4.194      +189%
 
 ======================================================================
 2. SPATIAL RESIDUAL CHECK
@@ -42,13 +42,20 @@ metres apart, so this is tested WITHIN each region: across regions the only
 thing a global test would detect is the 200 km gap between them.
 
       region n_sites Moran_I expected p_perm median_sep_km min_sep_km
-1       Palm      30  0.0110  -0.0345 0.8780          5.43      0.444
+1       Palm      30  0.0110  -0.0345 0.8778          5.43      0.444
 2 Whitsunday      41  0.1457  -0.0250 0.0066          8.93      0.355
 
 Inverse-distance weights, 4999 permutations. Under no spatial structure
 Moran's I sits near -1/(n-1), which is slightly below zero, not at zero.
 
-SPATIAL STRUCTURE DETECTED in: Whitsunday — the site random effect has not absorbed it, and a spatial term would be justified.
+CAUTION — these are SINGLE-SEED values and must not be read as a result.
+Randomised quantile residuals draw from a uniform, so Moran's I and its
+permutation p-value both depend on set.seed(). Step 5 repeats this across
+twenty seeds and supersedes the numbers above. Its finding: Whitsunday's I is
+positive under every seed (0.079 to 0.167) while Palm's is near zero under
+every seed, but the Whitsunday permutation p falls below 0.05 in only 11 of
+20 randomisations. Residual spatial structure in Whitsunday is suggested,
+not established. See coral_trout_stage2_step5.R and stage2_step5_log.txt.
 
 ======================================================================
 3. VARIABLE DICTIONARY
@@ -119,11 +126,11 @@ shared shares (2 x covariance / total, so unique + shared sums to 1):
        block_1    block_2 shared_share
 18 Environment Space/time       0.0761
 3  Environment Management       0.0519
-2      Habitat Management       0.0322
+2      Habitat Management       0.0323
 16  Management Space/time      -0.0237
 8  Environment    Habitat      -0.0125
 17     Habitat Space/time       0.0123
-22     Habitat  Site (RE)       0.0121
+22     Habitat  Site (RE)       0.0120
 23 Environment  Site (RE)       0.0047
 20   Site (RE) Space/time      -0.0006
 21  Management  Site (RE)       0.0000
@@ -151,14 +158,14 @@ Mundlak model: deviance explained 58.8%  (pooled model: 60.2%)
 
 smooth terms:
                   edf Ref.df Chi.sq p-value
-s(rugosity_bw) 1.0215 1.0303 2.4434  0.1273
-s(rugosity_wi) 1.0004 1.0008 2.9404  0.0864
-s(LHC_bw)      2.5660 2.8165 4.0084  0.1838
-s(LHC_wi)      1.0482 1.0916 0.0127  0.9832
+s(rugosity_bw) 1.0187 1.0264 2.4363  0.1267
+s(rugosity_wi) 1.0004 1.0009 2.9401  0.0865
+s(LHC_bw)      2.5657 2.8163 4.0057  0.1840
+s(LHC_wi)      1.0468 1.0890 0.0124  0.9833
 
 magnitude across the 10th-90th percentile of each component:
                             term     p10    p90 ratio    lo    hi
-1        Rugosity, between sites   2.827  3.873 1.278 0.935 1.748
+1        Rugosity, between sites   2.827  3.873 1.279 0.935 1.748
 2          Rugosity, within site  -0.797  0.674 1.131 0.983 1.303
 3 Live hard coral, between sites  15.733 44.171 1.007 0.705 1.438
 4   Live hard coral, within site -15.537 14.046 1.006 0.836 1.211

@@ -152,10 +152,14 @@ mor <- do.call(rbind, lapply(levels(site$REGION), function(rg) {
 cap(mor)
 say("\nInverse-distance weights, 4999 permutations. Under no spatial structure")
 say("Moran's I sits near -1/(n-1), which is slightly below zero, not at zero.")
-sig <- mor$p_perm < 0.05
-say(if (any(sig)) paste0("\nSPATIAL STRUCTURE DETECTED in: ", paste(mor$region[sig], collapse = ", "),
-                         " — the site random effect has not absorbed it, and a spatial term would be justified.")
-    else "\nNo residual spatial structure detected in either region. The site random effect\nis absorbing the spatial signal, which is what the nested design predicted and\nwhy a continuous spatial field was not warranted here.")
+say("\nCAUTION — these are SINGLE-SEED values and must not be read as a result.")
+say("Randomised quantile residuals draw from a uniform, so Moran's I and its")
+say("permutation p-value both depend on set.seed(). Step 5 repeats this across")
+say("twenty seeds and supersedes the numbers above. Its finding: Whitsunday's I is")
+say("positive under every seed (0.079 to 0.167) while Palm's is near zero under")
+say("every seed, but the Whitsunday permutation p falls below 0.05 in only 11 of")
+say("20 randomisations. Residual spatial structure in Whitsunday is suggested,")
+say("not established. See coral_trout_stage2_step5.R and stage2_step5_log.txt.")
 write.csv(mor, file.path(OUT, "table9_spatial_autocorrelation.csv"), row.names = FALSE)
 
 # ---------------------------------------------------------------------
@@ -289,8 +293,8 @@ for (rg in levels(site$REGION)) {
   mi <- mor[mor$region == rg, ]
   plot(D[ut], prod[ut], pch = 16, col = adjustcolor("grey30", 0.35), cex = 0.55,
        xlab = "Distance between sites (km)", ylab = "Product of residual deviations",
-       main = sprintf("%s   Moran's I = %.3f, p = %.3f", rg, mi$Moran_I, mi$p_perm),
-       font.main = 1, cex.main = 0.9, adj = 0)
+       main = sprintf("%s   Moran's I = %.3f  (single seed - see Fig 15)", rg, mi$Moran_I),
+       font.main = 1, cex.main = 0.85, adj = 0)
   abline(h = 0, col = "grey55", lty = 2)
   lines(lowess(D[ut], prod[ut]), col = RED, lwd = 2)
 }
