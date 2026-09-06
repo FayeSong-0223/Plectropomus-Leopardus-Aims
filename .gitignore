@@ -1,0 +1,12 @@
+# macOS
+.DS_Store
+
+# Reports, plans and scope documents — not published
+*.docx
+
+# Raw AIMS data — not redistributed (see DATA.md)
+Stage1/data/
+
+# Derived row-level data — withheld pending confirmation of redistribution
+# terms from AIMS. Delete the line below to publish it.
+Stage1/outputs/analysis_dataset.csv

@@ -1,0 +1,151 @@
+
+======================================================================
+1. READ
+======================================================================
+coordinate file column names after stripping the byte-order mark: REGION, ISLAND, ZONE (POST-2004), SITE NAME, lat, long
+site-level extract : 637 rows x 304 columns
+coordinate file    : 112 rows
+
+======================================================================
+2. PARSE COORDINATES
+======================================================================
+coordinates parsed, failures: 0
+latitude  range: -23.217 to -18.537
+longitude range: 146.480 to 151.101
+coordinate REGION values after fixing the WHITUSNDAY misspelling: KEPPEL, MAGNETIC, PALM, WHITSUNDAY
+
+======================================================================
+3. SUBSET AND CLEAN
+======================================================================
+NTR levels after whitespace normalisation: Fished | NTR 1987 | NTR 2004
+subset to Palm + Whitsunday: 467 rows, 71 sites, 13 region-years
+rows without coordinates after join: 0
+
+======================================================================
+4. RECOVER INTEGER COUNTS
+======================================================================
+scaling step derived per year:
+   2007 : 0.6666
+   2009 : 0.6666
+   2012 : 0.6666
+   2014 : 0.6666
+   2016 : 0.6666
+   2017 : 0.6666
+   2018 : 0.6660
+-> the step is NOT uniform; 2018 differs from the other years.
+max deviation from an integer after recovery: 0.00000
+values ambiguous (deviation between 0.4 and 0.6): 0
+counts recovered cleanly. range: 0 to 30
+NOTE: survey area is constant, so no offset is required in a later count model —
+      a constant offset is absorbed into the intercept.
+
+======================================================================
+5. DESIGN AUDIT
+======================================================================
+
+-- 5a. Panel completeness (sites x survey years) --
+            
+             2007 2009 2012 2014 2016 2017 2018
+  Palm         30   30   30   30   30    0   30
+  Whitsunday   41   41   41   41   41   41   41
+
+rows expected if the panel is complete: 467   rows observed: 467
+panel is COMPLETE - every site in every year its region was surveyed
+
+-- 5b. Protection x exposure (the confound) --
+              
+               Fished NTR 1987 NTR 2004
+  Sheltered         9       15       10
+  Semi-Exposed      6        1        1
+  Exposed          20        8        1
+
+Reserves are not sited at random. Fished sites are predominantly exposed;
+no-take sites, especially the 2004 zones, are predominantly sheltered.
+The sheltered stratum is the only one with usable balance across all three levels.
+
+-- 5c. Protection x region (sites) --
+            
+             Fished NTR 1987 NTR 2004
+  Palm           15       12        3
+  Whitsunday     20       12        9
+
+-- 5d. Species composition: why this subset --
+     region leop_share pct_zero
+       Palm      0.392    0.172
+ Whitsunday      0.734    0.073
+
+P. leopardus dominates in Whitsunday and is roughly co-dominant in Palm.
+Keppel and Magnetic (excluded) are almost entirely P. maculatus.
+
+-- 5e. Where each covariate's variance sits --
+Covariates that vary almost entirely between region-years are identified from
+~13 contrasts, not 467 observations. This governs what a later model can claim.
+       covariate between_region_year_share distinct_region_year_means
+          maxDHW                     0.991                         12
+         SSTmean                     0.983                         13
+           LCC_%                     0.539                         13
+           LHC_%                     0.408                         13
+ Corrected depth                     0.298                          2
+            ChlA                     0.248                         13
+             SCI                     0.247                         13
+           kd490                     0.230                         13
+         Cyclone                     0.182                          7
+        rugosity                     0.175                         13
+
+-- 5f. Correlated covariate pairs --
+   r(ChlA, kd490) = +1.00
+   r(rugosity, SCI) = +0.93
+   r(LCC_%, LHC_%) = +0.80
+   r(LT Fprimary, kd490) = +0.35
+   r(maxDHW, SSTanom) = +0.43
+Keep one of each near-duplicate pair (ChlA/kd490 and rugosity/SCI are
+effectively duplicate measurements here).
+CORRECTION worth recording: LT Fprimary correlates 0.75 with turbidity across
+the FULL four-region dataset, but only ~0.35 within Palm + Whitsunday. The
+earlier justification for excluding it does not hold in this subset. It remains
+excluded on different grounds: it is a modelled index rather than a measurement,
+and it is site-constant, so it competes with protection and exposure for the
+same 71 between-site degrees of freedom.
+
+-- 5g. Site-level constants (estimable only between sites) --
+   wave exposure index: varies within 0 of 71 sites
+   LT Fprimary: varies within 0 of 71 sites
+
+======================================================================
+6. DATA-QUALITY APPENDIX
+======================================================================
+Implied mean weight of legal-sized fish (legal biomass / legal density):
+   Keppel 2021              : 0.30 kg
+   all other region-years   : 1.11 to 2.17 kg
+Rows where legal density exceeds total density (impossible): 18
+Keppel 2021 total density recovers to integers on a step of 0.6660 (max dev 0.0000)
+Keppel 2021 legal density on that same step: max dev 0.4468
+=> survey area is unchanged; the anomaly is confined to the legal-density column,
+   and the discrepancy is not a constant factor, so a units error does not fit.
+   Reported as a question for AIMS, not as a correction.
+
+======================================================================
+7. FIGURES
+======================================================================
+wrote fig1_design_map.png
+wrote fig2_density_protection.png
+wrote fig3_habitat_disturbance.png
+
+======================================================================
+8. OUTPUTS
+======================================================================
+     Region Protection Sites Sheltered SemiExposed Exposed SurveyYears
+       Palm     Fished    15         6           3       6           6
+       Palm   NTR 1987    12         5           1       6           6
+       Palm   NTR 2004     3         3           0       0           6
+ Whitsunday     Fished    20         3           3      14           7
+ Whitsunday   NTR 1987    12        10           0       2           7
+ Whitsunday   NTR 2004     9         7           1       1           7
+ Observations
+           90
+           72
+           18
+          140
+           84
+           63
+wrote table1_design_summary.csv, table2_covariate_variance_structure.csv, analysis_dataset.csv
