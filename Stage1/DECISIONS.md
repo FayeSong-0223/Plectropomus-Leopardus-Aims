@@ -72,3 +72,24 @@ Result: the dip at moderate thermal stress survives removal and is if anything
 deeper. The rising upper limb does not survive and is a boundary artefact in both
 fits. Conclusion recorded: a negative association at moderate DHW is defensible;
 nothing about the high end is identified and it must not be quoted.
+
+**2026-09-06 — Step 3 sensitivity suite specified in advance of running it.**
+Five checks agreed before any were run: leave-one-region-year-out influence,
+restriction to the sheltered stratum, each region fitted alone, a lagged cyclone
+term, and a Tweedie refit on the density scale. Specifying the full set first
+means none of them can be presented as "the one that worked".
+
+**2026-09-06 — Cyclone integration downgraded to a lag, with the reason recorded.**
+The Stage 1 plan asked for cyclone exposure integrated across survey intervals.
+That is not possible from this extract: exposure is recorded only at survey points
+and the intervening years are absent from the file. A lagged term (the previous
+survey at the same site) is what the data support, and it is a weaker substitute.
+Proper integration needs external cyclone track data, which is now on the list of
+questions for AIMS.
+
+**2026-09-06 — Habitat covariates NOT swapped despite the null result.**
+`LCC_%` has more between-region-year variance than the chosen `LHC_%` and fell
+harder in 2017, so swapping them was considered. Rejected: the habitat block came
+out null, and changing a covariate after seeing a null result is selection on the
+outcome. The null is reported as conditional on the covariates chosen in advance,
+and that conditionality is stated as a limitation rather than engineered away.

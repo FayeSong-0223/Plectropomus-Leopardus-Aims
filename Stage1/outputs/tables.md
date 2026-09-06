@@ -83,3 +83,42 @@ Unique shares sum to 0.847; the remaining 0.153 is shared between blocks. The
 largest shared component is Environment with Space/time (0.038), which is the
 expected consequence of thermal covariates and year both varying at region-year
 level.
+
+## Table 6 — Influence: leave one region-year out (Step 3)
+
+Range of each estimate across 13 refits, each omitting one region-year.
+
+| Quantity | Full data | Range across 13 refits |
+|---|---:|---|
+| Whitsunday NTR 1987 (ratio) | 3.21 | 2.91 – 3.40 |
+| Whitsunday NTR 2004 (ratio) | 2.89 | 2.63 – 3.10 |
+| Palm NTR 1987 (ratio) | 1.26 | 1.16 – 1.30 |
+| s(maxDHW) p-value | <0.001 | <0.001 – <0.001 |
+| s(kd490) p-value | 0.014 | 0.005 – 0.126 |
+| s(rugosity) p-value | 0.097 | 0.021 – 0.192 |
+
+The protection estimates barely move. The turbidity and rugosity terms do: both
+cross conventional significance depending on which single survey is omitted, so
+neither is reliably distinguishable from zero.
+
+## Table 7 — Protection under every specification (Step 3)
+
+Density ratio against fished sites, 95% intervals.
+
+| Region | Protection | Full (A) | Sheltered only | Region alone | Lagged cyclone | Tweedie |
+|---|---|---|---|---|---|---|
+| Palm | NTR 1987 | 1.26 (0.88–1.80) | **0.47 (0.24–0.93)** | 1.12 (0.75–1.67) | 1.31 (0.88–1.96) | 1.25 (0.88–1.77) |
+| Palm | NTR 2004 | 0.95 (0.54–1.67) | 1.18 (0.65–2.12) | 1.42 (0.75–2.69) | 0.68 (0.37–1.25) | 1.00 (0.57–1.74) |
+| Whitsunday | NTR 1987 | 3.21 (2.28–4.52) | 2.58 (1.56–4.25) | 2.73 (1.84–4.05) | 2.98 (2.10–4.25) | 3.24 (2.33–4.50) |
+| Whitsunday | NTR 2004 | 2.89 (1.99–4.19) | 1.87 (1.11–3.16) | 2.49 (1.63–3.83) | 2.70 (1.84–3.96) | 2.86 (2.00–4.08) |
+
+Every Whitsunday estimate excludes 1 in every specification. The Palm sheltered-only
+estimate for NTR 1987 is the one reversal in the whole set and rests on 6 fished and
+5 reserve sites; it is reported, not explained.
+
+## Sheltered stratum composition
+
+| Region | Fished | NTR 1987 | NTR 2004 |
+|---|---:|---:|---:|
+| Palm | 6 | 5 | 3 |
+| Whitsunday | 3 | 10 | 7 |
