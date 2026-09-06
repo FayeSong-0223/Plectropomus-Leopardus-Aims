@@ -1,106 +1,124 @@
-# *Plectropomus leopardus* on inshore reefs of the Palm and Whitsunday regions
+# What explains variation in *Plectropomus leopardus* density?
 
-**Stage 1 — data preparation and design audit.** A preparatory analysis of the AIMS
-inshore reef monitoring extract, 2007–2018.
+Inshore reefs of the Palm and Whitsunday regions, Great Barrier Reef, 2007–2018.
+An analysis of the AIMS inshore reef monitoring extract.
 
-Ziqi (Faye) Song · September 2026
+Ziqi (Faye) Song
 
 ---
 
-## What this is
+## The result
 
-A complete, reproducible audit of a monitoring dataset, carried out *before* any model
-is fitted. It establishes what the data can and cannot support, and surfaces the design
-problems that would otherwise be discovered halfway through an analysis.
+On Whitsunday inshore reefs, sites inside no-take zones hold roughly **three times**
+the density of *P. leopardus* found on fished sites. In the Palm region, 200 km away
+under the same zoning framework, **no difference is detectable**.
 
-Nothing here is causal. Patterns are described, not explained.
+That contrast survives every check applied to it:
 
-## Scope
+| | Full data | 13 leave-one-out refits | 5 specifications | Excludes 1? |
+|---|---:|---|---|---|
+| Whitsunday NTR 1987 | 3.21 | 2.91 – 3.40 | 2.58 – 3.24 | always |
+| Whitsunday NTR 2004 | 2.89 | 2.63 – 3.10 | 1.87 – 2.89 | always |
+| Palm NTR 1987 | 1.26 | 1.16 – 1.30 | 0.47 – 1.31 | no |
+| Palm NTR 2004 | 0.95 | — | 0.68 – 1.42 | no |
 
-- **Species:** *Plectropomus leopardus* only. Not pooled *Plectropomus*.
-- **Regions:** Palm and Whitsunday. Keppel and Magnetic are excluded — both are almost
-  entirely *P. maculatus*, so pooling would conflate species with region.
-- **Response:** density (rescaled counts). Species-level biomass and size structure do
-  not exist in this extract; they are available only pooled across all three congeners.
-- **Records:** 467 site-years, 71 sites, 13 region-years. The panel is complete.
+The five specifications are: the full model, restriction to the sheltered stratum,
+each region fitted alone, a lagged cyclone term, and a Tweedie refit on the density
+scale.
 
-## Main findings from the audit
+Nothing here is causal. Protection was not assigned at random.
 
-1. **Densities are rescaled counts, and the scaling constant is not uniform.** It is
-   0.6666 in 2007–2017 and 0.6660 in 2018. Deriving the step per year recovers integers
-   exactly (max deviation 0.00000); assuming a single step corrupts one year silently.
-   Survey area is constant, so a later count model needs no offset.
+## What else the analysis found
 
-2. **Protection is confounded with wave exposure, unevenly by region.** In Whitsunday,
-   14 of 20 fished sites are exposed while 10 of 12 long-standing reserve sites are
-   sheltered. In Palm the levels are far more comparable. The region with the large
-   apparent protection effect is the one where the comparison is least trustworthy.
+**Management explains more than site identity.** On a link-scale variance
+decomposition, management takes the largest single share (0.481) against 0.089 for
+unexplained site identity. Read as an upper bound — see the report, section 6.
 
-3. **Thermal covariates are near-perfectly nested within region-years.** `maxDHW` and
-   `SSTmean` carry 99% and 98% of their variance between region-years, so they rest on
-   roughly a dozen contrasts rather than 467 observations. `Cyclone` does not (18%) and
-   is much better identified.
+**Habitat does not predict density.** None of rugosity (p = 0.097), live hard coral
+(p = 0.375) or depth (p = 0.100) is significant once site and region-specific time
+are accounted for. Conditional on covariates chosen before modelling.
 
-4. **Coral cover and structural complexity decoupled in 2017.** Whitsunday live hard
-   coral fell from 42% to 19% while mean rugosity did not decline. Covariate choice
-   between the two is therefore consequential, not cosmetic.
+**Two environmental terms are not stable.** Turbidity ranges p = 0.005–0.126 and
+rugosity p = 0.021–0.192 depending on which single survey is omitted. Neither is
+reliably distinguishable from zero.
+
+**The thermal curve is only half identified.** `s(maxDHW)` is significant, but the
+fitted curve rises above 4 degree heating weeks — where Whitsunday 2017 is the only
+region-year with data. Refitting without that survey keeps the dip at moderate
+stress and removes the rising limb, which is a spline boundary artefact.
+
+## Design problems the data has
+
+**Protection is confounded with wave exposure, unevenly.** In Whitsunday, 14 of 20
+fished sites are exposed while 10 of 12 long-standing reserve sites are sheltered.
+In Palm the levels are comparable. The region with the large effect is the one where
+the naive comparison is least trustworthy — hence the exposure adjustment and the
+sheltered-only restriction.
+
+**Thermal covariates are nearly nested in region-year.** `maxDHW` and `SSTmean` carry
+99% and 98% of their variance between region-years, so they rest on about a dozen
+contrasts. `Cyclone` carries 18% and is much better identified.
+
+**The density scaling constant is not uniform** — 0.6666 in 2007–2017, 0.6660 in 2018.
+Deriving it per year recovers integers exactly. Assuming one value corrupts a year
+silently.
+
+**Species-level data is density only.** Biomass and the legal size split exist solely
+pooled across all three *Plectropomus* congeners, and the mixing ratio moves between
+years, so pooled biomass is not a usable proxy for one species.
 
 ## Files
 
 | File | Contents |
 |---|---|
-| `coral_trout_stage1.R` | The whole analysis. Base R only — no package dependencies. |
-| `data/` | The two source CSVs. **Not included in this repository** — see [DATA.md](../DATA.md). |
-| `outputs/fig1_design_map.png` | Sites by protection status and exposure. |
-| `outputs/fig2_density_protection.png` | Density over time by region and protection. |
-| `outputs/fig3_habitat_disturbance.png` | Habitat condition and disturbance exposure. |
-| `outputs/table1_design_summary.csv` | Sites and observations by region, protection, exposure. |
-| `outputs/table2_covariate_variance_structure.csv` | Between-region-year variance share per covariate. |
-| `outputs/analysis_dataset.csv` | Analysis-ready dataset with recovered counts. **Not included** — the script regenerates it; see [DATA.md](../DATA.md). |
-| `outputs/audit_log.txt` | Full console log — every number quoted above. |
+| `coral_trout_stage1.R` | Data preparation and design audit. Figures 1–3. |
+| `coral_trout_stage2_step1.R` | Negative binomial mixed model, exposure sensitivity. Figures 4–5. |
+| `coral_trout_stage2_step2.R` | Habitat, environment, variance decomposition. Figures 6–9. |
+| `coral_trout_stage2_step3.R` | Influence analysis and sensitivity suite. Figures 10–11. |
+| `DECISIONS.md` | Every change to the analysis plan, and what prompted it. |
+| `outputs/tables.md` | All numeric tables. |
+| `outputs/*_log.txt` | Full console logs — every number in the report. |
+| `outputs/fig*.png` | All figures. |
 
 ## Reproducing
 
-Place the two source CSVs in `data/`, then:
-
 ```bash
-Rscript coral_trout_stage1.R
+Rscript coral_trout_stage1.R        # must run first — writes the analysis dataset
+Rscript coral_trout_stage2_step1.R
+Rscript coral_trout_stage2_step2.R
+Rscript coral_trout_stage2_step3.R
 ```
 
-Run from this directory (`Stage1/`). No packages are required, so this works on a fresh R
-installation. Everything in `outputs/` is regenerated.
+Run from the project directory, with the two source CSVs in `data/`.
 
-Base R was used deliberately: it makes the script portable and immune to package
-version drift. Stage 2 will need `glmmTMB` or `mgcv`, and `sf` for a coastline map.
+**No packages are required.** The analysis uses base R and `mgcv`, both of which ship
+with every R installation, so there are no versions to reconcile. `gam()` with
+`s(SITE, bs = "re")` fits the random effect by REML, so this is a mixed model in the
+usual sense rather than a smoothing device.
 
-## Data preparation issues encountered
+## On method
 
-Recorded because each is a silent failure if missed:
+The rule followed throughout: **changes may be made in response to what is learned
+about data structure or model adequacy; changes made in response to an effect
+estimate are avoided.** `DECISIONS.md` logs each change against that rule, including
+three cases where something was deliberately *not* changed — most notably a habitat
+covariate that was not swapped after the habitat block came out null.
 
-- The coordinate file carries a UTF-8 byte-order mark on its header, but the degree
-  symbols in the coordinate strings are not valid UTF-8. Reading the file as UTF-8
-  fails on the body; reading it plainly leaves the first column named `<BOM>REGION`
-  so that `coord$REGION` returns `NULL` without error.
-- The coordinate file contains `WHITUSNDAY` alongside `WHITSUNDAY`.
-- The `NTR` field contains a double-space variant of `NTR 1987`, creating a spurious
-  fourth protection level.
-- The density scaling constant changes between 2017 and 2018.
+## Questions this analysis could not answer
 
-## A note on the wider file (out of scope)
+- Is transect-level data with species-specific lengths available? Species-level
+  biomass and size structure are the binding limitation on anything
+  fisheries-relevant here.
+- What survey area underlies the density values, and is the 2018 change in scaling
+  convention intentional?
+- Is external cyclone track data available, so exposure can be integrated across
+  survey intervals rather than read at survey points?
+- For Keppel 2021 (outside this analysis), legal density exceeds total density in 18
+  rows and implied mean weight of legal fish is 0.30 kg against 1.11–2.17 kg
+  elsewhere. Total density recovers cleanly on the same step, so survey area is
+  unchanged, and the discrepancy is not a constant multiple. Is this known?
 
-For Keppel 2021, `Plectropomus legal density` exceeds `Plectropomus total density` in
-18 rows, and implied mean weight of legal-sized fish is 0.30 kg against 1.11–2.17 kg in
-every other region-year. Total density for the same rows recovers cleanly, so the survey
-area is unchanged, and the discrepancy is not a constant multiple — a units error does
-not fit. Reported as a question for AIMS, not as a correction.
+## Data
 
-## Next step
-
-A hierarchical count model with site-level random effects, protection and exposure
-entered together, and honest treatment of the fact that thermal covariates rest on
-about a dozen contrasts. The audit above determines what that model may claim.
-
----
-
-Based on Australian Institute of Marine Science data. See [DATA.md](../DATA.md) for
-provenance, licence and attribution.
+AIMS inshore reef monitoring, site-level extract. Not redistributed in this
+repository — see `.gitignore`. Place the two source CSVs in `data/` to reproduce.
