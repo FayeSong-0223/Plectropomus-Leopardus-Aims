@@ -39,12 +39,10 @@ fish <- read.csv(file.path(DATA, "Selected fish benthic physical sitelevel 2021.
 # but the degree symbols in lat/long are not valid UTF-8. Reading it as UTF-8
 # therefore fails on the body, and reading it plainly leaves the first column
 # named "<BOM>REGION" so that coord$REGION is silently NULL. Read plainly and
-# strip any leading non-alphanumeric bytes from the names. The strip must be
-# byte-wise: in a C locale [:alnum:] does not match the byte-order mark, so a
-# character-wise sub() leaves it in place and coord$REGION is NULL again.
+# strip any leading non-alphanumeric bytes from the names.
 coord <- read.csv(file.path(DATA, "Inshore fish site coordinates.csv"),
                   check.names = FALSE, stringsAsFactors = FALSE)
-names(coord) <- sub("^[^A-Za-z0-9]+", "", trimws(names(coord)), useBytes = TRUE)
+names(coord) <- sub("^[^[:alnum:]]+", "", trimws(names(coord)))
 say("coordinate file column names after stripping the byte-order mark: ",
     paste(names(coord), collapse = ", "))
 say("site-level extract : ", nrow(fish), " rows x ", ncol(fish), " columns")
@@ -337,7 +335,7 @@ t1 <- do.call(rbind, lapply(split(sites, list(sites$REGION, sites$NTR), drop = T
              Observations = nrow(z) * length(yy))
 }))
 t1 <- t1[order(t1$Region, t1$Protection), ]
-write.csv(t1, file.path(OUT, "table1_design_summary.csv"), row.names = FALSE)
+write.csv(t1, file.path(OUT, "table0_design_summary.csv"), row.names = FALSE)
 print(t1, row.names = FALSE); log_lines <- c(log_lines, capture.output(print(t1, row.names = FALSE)))
 
 write.csv(vs, file.path(OUT, "table2_covariate_variance_structure.csv"), row.names = FALSE)

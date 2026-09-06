@@ -133,3 +133,40 @@ check: unique 0.847 + shared 0.152 = 1.000
 wrote fig7_variance_decomposition.png (now two panels)
 wrote fig12_effect_magnitudes.png
 wrote fig13_spatial_residuals.png
+
+======================================================================
+5. WITHIN AND BETWEEN HABITAT EFFECTS (Q4)
+======================================================================
+A pooled habitat coefficient answers two questions at once and separates
+neither: do sites with more structure hold more fish (between-site, and
+confounded by everything else fixed about a site), and does a site that gains
+structure gain fish (within-site, immune to any time-invariant site
+characteristic). Q4 asks the second. Splitting each habitat covariate into a
+site mean and a within-site deviation estimates both.
+
+depth is site-constant in this subset (varies at 0 of 71 sites), so it has no
+within-site component and is left unsplit.
+
+Mundlak model: deviance explained 58.8%  (pooled model: 60.2%)
+
+smooth terms:
+                  edf Ref.df Chi.sq p-value
+s(rugosity_bw) 1.0215 1.0303 2.4434  0.1273
+s(rugosity_wi) 1.0004 1.0008 2.9404  0.0864
+s(LHC_bw)      2.5660 2.8165 4.0084  0.1838
+s(LHC_wi)      1.0482 1.0916 0.0127  0.9832
+
+magnitude across the 10th-90th percentile of each component:
+                            term     p10    p90 ratio    lo    hi
+1        Rugosity, between sites   2.827  3.873 1.278 0.935 1.748
+2          Rugosity, within site  -0.797  0.674 1.131 0.983 1.303
+3 Live hard coral, between sites  15.733 44.171 1.007 0.705 1.438
+4   Live hard coral, within site -15.537 14.046 1.006 0.836 1.211
+
+Reading for Q4. The within-site rugosity estimate is the one Q4 asks for,
+because it is immune to confounding by any fixed characteristic of a site.
+Within-site: 1.13 (0.98-1.30)   Between-site: 1.28 (0.94-1.75)
+If these disagree, the pooled estimate reported earlier was averaging two
+different things and should not be quoted without the split.
+
+wrote fig14_within_between_habitat.png

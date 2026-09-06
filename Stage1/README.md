@@ -35,8 +35,14 @@ decomposition, management takes the largest single share (0.481) against 0.089 f
 unexplained site identity. Read as an upper bound — see the report, section 6.
 
 **Habitat does not predict density.** None of rugosity (p = 0.097), live hard coral
-(p = 0.375) or depth (p = 0.100) is significant once site and region-specific time
-are accounted for. Conditional on covariates chosen before modelling.
+(p = 0.375) or depth (p = 0.100) is significant. Expressed as a magnitude, rugosity
+appeared to exclude 1 — but splitting it into between-site and within-site components
+shows neither does: 1.28 (0.94–1.75) and 1.13 (0.98–1.30). The pooled estimate looked
+precise only because it averaged two weakly estimated components.
+
+**Residual spatial structure remains in Whitsunday.** Moran's I on site-level residuals
+is 0.146 (p = 0.007) there and 0.011 (p = 0.878) in Palm. The site random effect has not
+absorbed the spatial signal in one region. Documented, not fixed — see `DECISIONS.md`.
 
 **Two environmental terms are not stable.** Turbidity ranges p = 0.005–0.126 and
 rugosity p = 0.021–0.192 depending on which single survey is omitted. Neither is
@@ -75,6 +81,7 @@ years, so pooled biomass is not a usable proxy for one species.
 | `coral_trout_stage2_step1.R` | Negative binomial mixed model, exposure sensitivity. Figures 4–5. |
 | `coral_trout_stage2_step2.R` | Habitat, environment, variance decomposition. Figures 6–9. |
 | `coral_trout_stage2_step3.R` | Influence analysis and sensitivity suite. Figures 10–11. |
+| `coral_trout_stage2_step4.R` | Effect magnitudes, Moran's I, variable dictionary, within-between split. Figures 12–14. |
 | `DECISIONS.md` | Every change to the analysis plan, and what prompted it. |
 | `outputs/tables.md` | All numeric tables. |
 | `outputs/*_log.txt` | Full console logs — every number in the report. |
@@ -87,9 +94,11 @@ Rscript coral_trout_stage1.R        # must run first — writes the analysis dat
 Rscript coral_trout_stage2_step1.R
 Rscript coral_trout_stage2_step2.R
 Rscript coral_trout_stage2_step3.R
+Rscript coral_trout_stage2_step4.R
 ```
 
-Run from the project directory, with the two source CSVs in `data/`.
+Run from the project directory, with the two source CSVs in `data/`. A clean
+end-to-end run from an empty `outputs/` reproduces every table and log byte for byte.
 
 **No packages are required.** The analysis uses base R and `mgcv`, both of which ship
 with every R installation, so there are no versions to reconcile. `gam()` with

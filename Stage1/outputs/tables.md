@@ -4,7 +4,7 @@ Numeric outputs are written as CSV to `outputs/` when the scripts run, but are n
 tracked in this repository. They are reproduced here so the repository is readable
 without running anything.
 
-## Table 1 — Survey design
+## Table 0 — Survey design
 
 | Region | Protection | Sites | Sheltered | Semi | Exposed | Years | Obs |
 |---|---|---:|---:|---:|---:|---:|---:|
@@ -122,3 +122,73 @@ estimate for NTR 1987 is the one reversal in the whole set and rests on 6 fished
 |---|---:|---:|---:|
 | Palm | 6 | 5 | 3 |
 | Whitsunday | 3 | 10 | 7 |
+
+## Table 1 — Variable dictionary (plan section 11)
+
+Every candidate variable, its scale of variation, and why it was kept or dropped.
+Selection was made in advance, not by any automatic procedure.
+
+| Variable | Role | Varies at | Between-RY share | Status | Reason |
+|---|---|---|---:|---|---|
+| pms.leop / count | Response | Site-year | 0.193 | Retained | Density recovered to integer counts; area constant so no offset |
+| NTR | Management | Site-constant | — | Retained | Three levels kept separate; NTR Pooled not used |
+| EXPOSURE | Confounder | Site-constant | — | Retained | Confounded with protection; must accompany it |
+| REGION, YEAR | Structure | — | — | Retained | Year made region-specific after Step 1 residual diagnostics |
+| SITE | Structure | — | — | Retained | Random intercept, 71 levels, REML |
+| rugosity | Habitat | Site-year | 0.175 | Retained | Structural complexity; chosen over SCI (r = 0.93) |
+| LHC_% | Habitat | Site-year | 0.408 | Retained | Live hard coral; chosen over LCC_% (r = 0.80) in advance |
+| Corrected depth | Habitat | Site-constant here | 0.298 | Retained | Varies at 0 of 71 sites in this subset |
+| kd490 | Environment | Site-year | 0.230 | Retained | Water clarity; chosen over ChlA (r = 1.00 in this subset) |
+| maxDHW | Disturbance | Region-year | 0.991 | Retained (Model A only) | Nearly nested in region-year; not identifiable in Model B |
+| Cyclone | Disturbance | Mostly site-level | 0.182 | Retained | Better identified than maxDHW; interval integration impossible here |
+| SCI | Habitat | Site-year | 0.247 | Dropped | Duplicate of rugosity (r = 0.93) |
+| ChlA | Environment | Site-year | 0.248 | Dropped | Duplicate of kd490 (r = 1.00) |
+| LCC_% | Habitat | Site-year | 0.539 | Dropped | Correlates 0.80 with LHC_%; **not** reinstated after the habitat null |
+| SSTmean | Environment | Region-year | 0.983 | Dropped | 98% between-region-year; would compete with maxDHW |
+| LT Fprimary | Fishing proxy | Site-constant | — | Dropped | Modelled index, and site-constant, so competes with protection for the same 71 df |
+| wave exposure index | Confounder | Site-constant | — | Dropped | Redundant with categorical EXPOSURE |
+
+## Table 8 — Effect magnitude across the observed range (Step 4)
+
+Each covariate moved from its 10th to its 90th percentile, everything else held fixed.
+
+| Covariate | 10th | 90th | Ratio (95% CI) | Change |
+|---|---:|---:|---|---:|
+| Rugosity index | 2.44 | 4.34 | 1.27 (1.04–1.54) | +27% |
+| Live hard coral (%) | 10.2 | 50.0 | 1.03 (0.81–1.32) | +3% |
+| Depth (m) | 3.94 | 6.97 | 1.33 (0.95–1.88) | +33% |
+| kd490 (turbidity) | 0.057 | 0.084 | 0.75 (0.57–0.97) | −25% |
+| Max degree heating weeks | 0.00 | 3.38 | 0.68 (0.53–0.87) | −32% |
+| Cyclone exposure index | 0.00 | 2.54 | 0.85 (0.72–0.99) | −16% |
+| *Whitsunday NTR 1987 vs fished* | — | — | 3.21 (2.28–4.52) | +221% |
+| *Whitsunday NTR 2004 vs fished* | — | — | 2.89 (1.99–4.19) | +189% |
+
+The thermal contrast spans 0–3.4 DHW, the identified part of the curve, avoiding the
+boundary artefact at the high end.
+
+## Table 9 — Spatial autocorrelation in site-level residuals (Step 4)
+
+Inverse-distance weights, 4999 permutations, tested within region.
+
+| Region | Sites | Moran's I | Expected | p | Median separation |
+|---|---:|---:|---:|---:|---:|
+| Palm | 30 | 0.011 | −0.034 | 0.878 | 5.4 km |
+| **Whitsunday** | 41 | **0.146** | −0.025 | **0.007** | 8.9 km |
+
+The site random effect has not absorbed the spatial signal in Whitsunday. A spatial
+term would be justified there. Documented, not acted on — see `DECISIONS.md`.
+
+## Table 10 — Habitat effects split within and between sites (Step 4)
+
+The pooled coefficient conflates two claims. Q4 asks the within-site one.
+
+| Term | Ratio (95% CI) |
+|---|---|
+| Rugosity, between sites | 1.28 (0.94–1.75) |
+| **Rugosity, within site** | **1.13 (0.98–1.30)** |
+| Live hard coral, between sites | 1.01 (0.71–1.44) |
+| Live hard coral, within site | 1.01 (0.84–1.21) |
+
+Neither rugosity component is distinguishable from 1. The pooled rugosity estimate in
+Table 8 excluded 1 only because it averaged two weakly-estimated components. **Q4's
+answer is "neither"** — not structural complexity, not live coral cover.

@@ -17,6 +17,10 @@
 #      scale of variation, retained or dropped, and why.
 #   4. The shared components of the variance decomposition, shown in the
 #      figure rather than only in the log (plan section 11, Fig 4).
+#   5. The within-between (Mundlak) split on the habitat block, which the
+#      plan's section 9 scopes specifically to Q4. A pooled habitat
+#      coefficient conflates 'sites with more structure hold more fish'
+#      with 'a site that gains structure gains fish'. Q4 asks the second.
 #
 #  Dependencies: mgcv only.
 #  Run:  Rscript coral_trout_stage2_step4.R
@@ -291,6 +295,72 @@ for (rg in levels(site$REGION)) {
   lines(lowess(D[ut], prod[ut]), col = RED, lwd = 2)
 }
 dev.off(); say("wrote fig13_spatial_residuals.png")
+
+# ---------------------------------------------------------------------
+# 5. WITHIN-BETWEEN (MUNDLAK) SPLIT ON THE HABITAT BLOCK
+# ---------------------------------------------------------------------
+rule("5. WITHIN AND BETWEEN HABITAT EFFECTS (Q4)")
+say("A pooled habitat coefficient answers two questions at once and separates")
+say("neither: do sites with more structure hold more fish (between-site, and")
+say("confounded by everything else fixed about a site), and does a site that gains")
+say("structure gain fish (within-site, immune to any time-invariant site")
+say("characteristic). Q4 asks the second. Splitting each habitat covariate into a")
+say("site mean and a within-site deviation estimates both.\n")
+
+for (v in c("rugosity", "LHC")) {
+  d[[paste0(v, "_bw")]] <- ave(d[[v]], d$SITE, FUN = function(z) mean(z, na.rm = TRUE))
+  d[[paste0(v, "_wi")]] <- d[[v]] - d[[paste0(v, "_bw")]]
+}
+say("depth is site-constant in this subset (varies at 0 of 71 sites), so it has no")
+say("within-site component and is left unsplit.\n")
+
+mM <- gam(count ~ REGION * NTR + EXPOSURE + s(YEAR, by = REGION, k = 5) +
+            s(rugosity_bw, k = 5) + s(rugosity_wi, k = 5) +
+            s(LHC_bw, k = 5) + s(LHC_wi, k = 5) +
+            s(depth, k = 5) + s(kd490, k = 5) + s(maxDHW, k = 5) +
+            s(Cyclone, k = 5) + s(SITE, bs = "re"),
+          family = nb(), data = d, method = "REML")
+say("Mundlak model: deviance explained ", sprintf("%.1f%%", summary(mM)$dev.expl * 100),
+    "  (pooled model: ", sprintf("%.1f%%", summary(mA)$dev.expl * 100), ")")
+say("\nsmooth terms:")
+cap(round(summary(mM)$s.table[grep("rugosity|LHC", rownames(summary(mM)$s.table)), , drop = FALSE], 4))
+
+mund <- do.call(rbind, lapply(
+  list(c("rugosity_bw", "Rugosity, between sites"), c("rugosity_wi", "Rugosity, within site"),
+       c("LHC_bw", "Live hard coral, between sites"), c("LHC_wi", "Live hard coral, within site")),
+  function(z) {
+    v <- eff_range(mM, z[1], d)
+    data.frame(term = z[2], p10 = round(v[["from"]], 3), p90 = round(v[["to"]], 3),
+               ratio = round(v[["ratio"]], 3), lo = round(v[["lo"]], 3), hi = round(v[["hi"]], 3))
+  }))
+say("\nmagnitude across the 10th-90th percentile of each component:")
+cap(mund)
+write.csv(mund, file.path(OUT, "table10_within_between_habitat.csv"), row.names = FALSE)
+
+rug_wi <- mund[mund$term == "Rugosity, within site", ]
+rug_bw <- mund[mund$term == "Rugosity, between sites", ]
+say("\nReading for Q4. The within-site rugosity estimate is the one Q4 asks for,")
+say("because it is immune to confounding by any fixed characteristic of a site.")
+say("Within-site: ", sprintf("%.2f (%.2f-%.2f)", rug_wi$ratio, rug_wi$lo, rug_wi$hi),
+    "   Between-site: ", sprintf("%.2f (%.2f-%.2f)", rug_bw$ratio, rug_bw$lo, rug_bw$hi))
+say("If these disagree, the pooled estimate reported earlier was averaging two")
+say("different things and should not be quoted without the split.")
+
+png(file.path(OUT, "fig14_within_between_habitat.png"), width = 1900, height = 1000, res = 220)
+par(mar = c(3.9, 10.6, 2.6, 1.2)); base_par()
+ord <- rev(seq_len(nrow(mund)))
+plot(NA, xlim = range(c(mund$lo, mund$hi, 1)), ylim = c(0.5, nrow(mund) + 0.5), log = "x",
+     yaxt = "n", xlab = "Density ratio, 10th to 90th percentile", ylab = "",
+     main = "Habitat effects split into between-site and within-site components",
+     font.main = 1, cex.main = 0.92, adj = 0)
+axis(2, at = ord, labels = mund$term, cex.axis = 0.74)
+abline(v = 1, col = "grey60", lty = 2)
+col <- ifelse(grepl("within", mund$term), TEAL, "grey55")
+segments(mund$lo, ord, mund$hi, ord, col = col, lwd = 2.2)
+points(mund$ratio, ord, pch = 19, col = col, cex = 1.1)
+legend("bottomleft", legend = c("within site (what Q4 asks)", "between sites"),
+       col = c(TEAL, "grey55"), lwd = 2.2, pch = 19, bty = "n", cex = 0.74, text.col = "grey20")
+dev.off(); say("\nwrote fig14_within_between_habitat.png")
 
 writeLines(log_lines, file.path(OUT, "stage2_step4_log.txt"))
 cat("\nDone. Outputs in ", OUT, "/\n", sep = "")
