@@ -93,3 +93,28 @@ harder in 2017, so swapping them was considered. Rejected: the habitat block cam
 out null, and changing a covariate after seeing a null result is selection on the
 outcome. The null is reported as conditional on the covariates chosen in advance,
 and that conditionality is stated as a limitation rather than engineered away.
+
+**2026-09-06 — Overreach recorded: a lag term was fitted that the plan had cut.**
+Section 13 of the project plan cuts "lag structures and distributed-lag models — 13
+region-years cannot identify them." A lagged cyclone term was fitted in Step 3 anyway,
+justified at the time as a substitute for the interval integration that turned out to
+be impossible. That justification does not hold: the impossibility of integration does
+not make a lag identifiable, and the plan had already ruled it out on those grounds.
+The term was not significant (p = 0.149) so nothing rests on it, but it should have
+been flagged as crossing a stated limit rather than presented as a sensible substitute.
+
+**2026-09-06 — Four outstanding plan deliverables completed in Step 4.**
+An audit against the project plan found four specified items had not been produced:
+the effect magnitudes Q1 actually asks for, the Moran's I spatial residual check
+(section 10, check 4), the variable dictionary (Table 1), and the shared components
+of the variance decomposition in the figure rather than only the log. All four are
+now in coral_trout_stage2_step4.R. None required new data.
+
+**2026-09-06 — Spatial structure found in Whitsunday residuals; NOT acted on here.**
+The Moran's I check the plan asked for found residual spatial autocorrelation in
+Whitsunday (I = 0.146, p = 0.007) but not in Palm (I = 0.011, p = 0.878). The site
+random effect has therefore not absorbed the spatial signal in one of the two regions,
+and a spatial term would be justified there. This is left as a documented finding
+rather than fixed, because adding a spatial field is the first item section 13 cuts
+and doing it now would be a substantial scope change made at the end of the project.
+It goes to the top of any version two.
