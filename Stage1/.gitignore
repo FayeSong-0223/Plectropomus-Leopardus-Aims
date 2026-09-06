@@ -1,0 +1,13 @@
+# data — not redistributed here
+data/
+
+# documents and tabular outputs
+*.docx
+*.csv
+*.pdf
+
+# system / editor
+.DS_Store
+.Rhistory
+.RData
+.Rproj.user/

@@ -1,0 +1,105 @@
+
+======================================================================
+1. LOAD
+======================================================================
+rows: 467   sites: 71   region-years: 13
+response is the recovered integer count; survey area is constant, so no offset
+counts range 0 to 30, mean 5.93, variance 30.29
+variance / mean = 5.11  -> overdispersed relative to Poisson, so negative binomial rather than Poisson
+
+======================================================================
+2. FIT
+======================================================================
+Model 1 (primary):   count ~ REGION*NTR + EXPOSURE + YEAR + s(SITE, re)
+Model 2 (sensitivity): the same without EXPOSURE
+
+The comparison is the point. Protection is confounded with exposure, and
+the confounding is far worse in Whitsunday than in Palm (Stage 1, section 3b).
+If the protection estimate moves a lot between these two fits, the unadjusted
+contrast in Figure 2 was substantially an exposure contrast.
+
+negative binomial theta (estimated): 3.781
+  small theta = strong overdispersion; theta -> Inf recovers Poisson
+deviance explained, model 1: 49.4%
+deviance explained, model 2: 49.4%
+
+-- random effect --
+          std.dev     lower     upper
+s(SITE) 0.3281638 0.2391241 0.4503581
+
+The site standard deviation is on the log scale. A value of s means that
+a site one standard deviation above average holds exp(s) times the density
+of an average site, after everything else in the model is accounted for.
+
+-- parametric coefficients, model 1 --
+                             Estimate Std. Error z value Pr(>|z|)
+(Intercept)                    1.3187     0.1566  8.4231   0.0000
+REGIONWhitsunday              -0.1821     0.1570 -1.1598   0.2461
+NTRNTR 1987                    0.1538     0.1737  0.8856   0.3758
+NTRNTR 2004                   -0.0390     0.2974 -0.1311   0.8957
+EXPOSURESemi-Exposed          -0.0921     0.1861 -0.4947   0.6208
+EXPOSUREExposed                0.1878     0.1292  1.4538   0.1460
+YEARF2009                     -0.0709     0.1142 -0.6206   0.5348
+YEARF2012                     -0.2064     0.1159 -1.7809   0.0749
+YEARF2014                     -0.2189     0.1161 -1.8857   0.0593
+YEARF2016                     -0.5457     0.1211 -4.5079   0.0000
+YEARF2017                      0.3778     0.1282  2.9470   0.0032
+YEARF2018                     -0.0489     0.1140 -0.4287   0.6681
+REGIONWhitsunday:NTRNTR 1987   1.1250     0.2449  4.5935   0.0000
+REGIONWhitsunday:NTRNTR 2004   1.2999     0.3332  3.9019   0.0001
+
+======================================================================
+3. PROTECTION EFFECTS
+======================================================================
+Reported as rate ratios against Fished sites within the same region.
+A ratio of 2 means twice the density. The interval is 95% Wald.
+
+      region protection adj_ratio adj_lo adj_hi unadj_ratio unadj_lo unadj_hi
+1       Palm   NTR 1987      1.17   0.83   1.64        1.20     0.86     1.69
+2 Whitsunday   NTR 1987      3.59   2.56   5.04        3.29     2.44     4.44
+3       Palm   NTR 2004      0.96   0.54   1.72        0.91     0.51     1.60
+4 Whitsunday   NTR 2004      3.53   2.46   5.05        3.17     2.29     4.41
+
+adj   = adjusted for wave exposure (model 1)
+unadj = not adjusted for exposure   (model 2)
+
+======================================================================
+4. DIAGNOSTICS
+======================================================================
+Deviance residuals are unreliable for discrete responses with small counts,
+so randomised quantile residuals are used instead: under a correct model
+they are exactly standard normal, which makes a QQ plot interpretable.
+
+randomised quantile residuals: mean -0.008  sd 0.969
+Shapiro-Wilk on the residuals: W = 0.9967, p = 0.4679
+  (a formal test is over-powered at n = 467; the QQ plot in Figure 4 is the thing to judge)
+
+largest mean residual by region-year (structure the model is missing):
+      Palm 2016       Palm 2014       Palm 2018 Whitsunday 2018       Palm 2012 
+         -0.652          -0.471          -0.395           0.350           0.464 
+      Palm 2007 
+          0.503 
+
+sd of site-mean residuals: 0.288  (near 1/sqrt(obs per site) if the site random effect is doing its job)
+mean observations per site: 6.6  -> expected sd about 0.390
+
+wrote fig4_model_diagnostics.png
+wrote fig5_protection_effects.png
+
+======================================================================
+5. READING THIS STEP
+======================================================================
+Settled: whether the model machinery is adequate — distribution, random
+effect, residual behaviour — and how far the protection contrast moves when
+wave exposure is adjusted for.
+
+Not settled: anything about environmental drivers, which are not in the model
+yet; and anything causal. Protection was not assigned at random, and adjusting
+for exposure removes one known confounder rather than all of them.
+
+Decision before Step 2: habitat covariates are added next. If reserves were
+PLACED in different habitat, adjusting for habitat is correct. If protection
+CHANGED the habitat, habitat is a mediator and adjusting for it would remove
+part of the effect being measured. For coral trout over this period the first
+is far more plausible, so Step 2 adjusts. Recorded here so the choice is not
+revisited after seeing which way the coefficient moves.
