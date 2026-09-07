@@ -217,8 +217,29 @@ say("Implied mean weight of legal-sized fish (legal biomass / legal density):")
 say("   Keppel 2021              : ", sprintf("%.2f kg", k_med))
 say("   all other region-years   : ", sprintf("%.2f to %.2f kg", min(others, na.rm = TRUE),
                                               max(others, na.rm = TRUE)))
-say("Rows where legal density exceeds total density (impossible): ",
-    sum(fish$`Plectropomus legal density` > fish$`Plectropomus total density` + 1e-9))
+# The count matters, because this goes into a question sent to AIMS. There are 18
+# rows in the whole extract where legal density exceeds total density, but they are
+# not one phenomenon: 17 are Keppel 2021 at factors of 2 to 7, and the 18th is a
+# Whitsunday rounding artefact three orders of magnitude smaller. Reporting "18 rows
+# in Keppel 2021" would be wrong; reporting only the 17 would leave the 18th
+# unexplained for anyone who runs the same check.
+ex <- fish$`Plectropomus legal density` > fish$`Plectropomus total density` + 1e-9
+exr <- fish[ex, ]
+exr$ratio <- exr$`Plectropomus legal density` / exr$`Plectropomus total density`
+exr$excess <- exr$`Plectropomus legal density` - exr$`Plectropomus total density`
+say("Rows where legal density exceeds total density (impossible): ", sum(ex), " in total")
+say("   by region-year:")
+for (g in names(sort(table(paste(exr$REGION, exr$YEAR)), decreasing = TRUE)))
+  say("     ", g, ": ", sum(paste(exr$REGION, exr$YEAR) == g), " rows")
+subst <- exr[exr$ratio > 1.05, ]; round_only <- exr[exr$ratio <= 1.05, ]
+say("   substantive (ratio > 1.05): ", nrow(subst), " rows, ratios ",
+    sprintf("%.2f to %.2f", min(subst$ratio), max(subst$ratio)),
+    " — all ", paste(unique(paste(subst$REGION, subst$YEAR)), collapse = ", "))
+if (nrow(round_only))
+  for (i in seq_len(nrow(round_only)))
+    say("   rounding artefact: ", round_only$REGION[i], " ", round_only$YEAR[i], " site ",
+        round_only$SITE[i], ", excess ", signif(round_only$excess[i], 3),
+        " (ratio ", sprintf("%.6f", round_only$ratio[i]), ") — a different thing entirely")
 kstep <- min(k$`Plectropomus total density`[k$`Plectropomus total density` > 0])
 say("Keppel 2021 total density recovers to integers on a step of ", sprintf("%.4f", kstep),
     " (max dev ",
@@ -229,7 +250,9 @@ say("Keppel 2021 legal density on that same step: max dev ",
                              round(k$`Plectropomus legal density`/kstep)))))
 say("=> survey area is unchanged; the anomaly is confined to the legal-density column,")
 say("   and the discrepancy is not a constant factor, so a units error does not fit.")
-say("   Reported as a question for AIMS, not as a correction.")
+say("   Reported as a question for AIMS, not as a correction. The question names 17")
+say("   Keppel 2021 rows, and notes the single Whitsunday rounding row separately so")
+say("   that anyone repeating the check finds 18 and is not left wondering.")
 
 # ---------------------------------------------------------------------
 # 7. FIGURES

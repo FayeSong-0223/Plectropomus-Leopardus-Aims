@@ -117,12 +117,19 @@ same 71 between-site degrees of freedom.
 Implied mean weight of legal-sized fish (legal biomass / legal density):
    Keppel 2021              : 0.30 kg
    all other region-years   : 1.11 to 2.17 kg
-Rows where legal density exceeds total density (impossible): 18
+Rows where legal density exceeds total density (impossible): 18 in total
+   by region-year:
+     Keppel 2021: 17 rows
+     Whitsunday 2018: 1 rows
+   substantive (ratio > 1.05): 17 rows, ratios 2.14 to 6.78 — all Keppel 2021
+   rounding artefact: Whitsunday 2018 site HY3, excess 0.0018 (ratio 1.000901) — a different thing entirely
 Keppel 2021 total density recovers to integers on a step of 0.6660 (max dev 0.0000)
 Keppel 2021 legal density on that same step: max dev 0.4468
 => survey area is unchanged; the anomaly is confined to the legal-density column,
    and the discrepancy is not a constant factor, so a units error does not fit.
-   Reported as a question for AIMS, not as a correction.
+   Reported as a question for AIMS, not as a correction. The question names 17
+   Keppel 2021 rows, and notes the single Whitsunday rounding row separately so
+   that anyone repeating the check finds 18 and is not left wondering.
 
 ======================================================================
 7. FIGURES

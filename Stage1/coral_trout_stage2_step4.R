@@ -223,48 +223,20 @@ cap(dict)
 write.csv(dict, file.path(OUT, "table1_variable_dictionary.csv"), row.names = FALSE)
 
 # ---------------------------------------------------------------------
-# 4. VARIANCE DECOMPOSITION WITH SHARED COMPONENTS SHOWN
+# 4. (REMOVED) VARIANCE DECOMPOSITION
 # ---------------------------------------------------------------------
-rule("4. VARIANCE DECOMPOSITION, UNIQUE AND SHARED")
-tm <- predict(mA, type = "terms"); cn <- colnames(tm)
-blk <- list(Management = grep("NTR", cn, value = TRUE),
-            Habitat    = unique(c(grep("s\\((rugosity|LHC)\\)", cn, value = TRUE), grep("^depth$", cn, value = TRUE))),
-            Environment= grep("s\\((kd490|maxDHW|Cyclone)\\)", cn, value = TRUE),
-            `Space/time`= unique(c(grep("^REGION$|^EXPOSURE$", cn, value = TRUE),
-                                   grep("YEAR", cn, value = TRUE))),
-            `Site (RE)`= grep("s\\(SITE\\)", cn, value = TRUE))
-blk <- lapply(blk, function(x) unique(x[x %in% cn]))
-B <- sapply(blk, function(k) if (length(k)) rowSums(tm[, k, drop = FALSE]) else rep(0, nrow(tm)))
-S <- cov(B); tot <- sum(S); uni <- diag(S) / tot
-sh <- S; diag(sh) <- NA
-shd <- as.data.frame(as.table(round(2 * sh / tot, 4)))
-shd <- shd[!is.na(shd$Freq) & as.character(shd$Var1) < as.character(shd$Var2), ]
-shd <- shd[order(-abs(shd$Freq)), ]; names(shd) <- c("block_1", "block_2", "shared_share")
-say("unique shares:"); cap(round(sort(uni, decreasing = TRUE), 3))
-say("\nshared shares (2 x covariance / total, so unique + shared sums to 1):")
-cap(shd)
-say("\ncheck: unique ", sprintf("%.3f", sum(uni)), " + shared ",
-    sprintf("%.3f", sum(shd$shared_share)), " = ",
-    sprintf("%.3f", sum(uni) + sum(shd$shared_share)))
-
-png(file.path(OUT, "fig7_variance_decomposition.png"), width = 2100, height = 1150, res = 220)
-par(mfrow = c(1, 2), mar = c(3.9, 7.6, 2.6, 1.2)); base_par()
-o <- sort(uni)
-bp <- barplot(o, horiz = TRUE, col = TEAL, border = NA, xlim = c(0, max(o) * 1.3),
-              xlab = "Share of variance", main = "a  Unique contribution",
-              font.main = 1, cex.main = 0.98, adj = 0, las = 1, cex.names = 0.78)
-text(o, bp, sprintf(" %.3f", o), pos = 4, cex = 0.72, col = "grey25", xpd = NA)
-s2 <- shd[order(shd$shared_share), ]
-lab2 <- paste(s2$block_1, "+", s2$block_2)
-bp2 <- barplot(s2$shared_share, horiz = TRUE, names.arg = lab2,
-               col = ifelse(s2$shared_share > 0, BLUE, RED), border = NA,
-               xlim = range(c(s2$shared_share, 0)) * 1.45,
-               xlab = "Share of variance", main = "b  Shared between blocks",
-               font.main = 1, cex.main = 0.98, adj = 0, las = 1, cex.names = 0.62)
-abline(v = 0, col = "grey45");
-text(s2$shared_share, bp2, sprintf("%.3f", s2$shared_share),
-     pos = ifelse(s2$shared_share > 0, 4, 2), cex = 0.66, col = "grey25", xpd = NA)
-dev.off(); say("\nwrote fig7_variance_decomposition.png (now two panels)")
+rule("4. THE VARIANCE DECOMPOSITION THAT USED TO BE HERE")
+say("This section computed a link-scale variance decomposition into unique and")
+say("shared block components, and wrote fig7_variance_decomposition.png. It has")
+say("been removed rather than corrected. The quantity was not invariant to the")
+say("coding of the factor contrasts: refitting the identical model under sum-to-zero")
+say("moved the management share from 0.481 to 0.391 and space/time from 0.121 to")
+say("0.345, with identical fitted values and identical log-likelihood. Two further")
+say("faults are recorded in DECISIONS.md.")
+say("")
+say("Q2 is answered in Step 2 instead, by out-of-sample predictive comparison and by")
+say("a drop-one-block comparison at fixed dispersion. Neither claims to separate")
+say("management from site identity, because in this design they are not separable.")
 
 ## Figure 12 — effect magnitudes
 png(file.path(OUT, "fig12_effect_magnitudes.png"), width = 2000, height = 1150, res = 220)

@@ -116,28 +116,19 @@ not established. See coral_trout_stage2_step5.R and stage2_step5_log.txt.
 17                                                    Redundant with categorical EXPOSURE; estimable but not needed alongside it
 
 ======================================================================
-4. VARIANCE DECOMPOSITION, UNIQUE AND SHARED
+4. THE VARIANCE DECOMPOSITION THAT USED TO BE HERE
 ======================================================================
-unique shares:
- Management  Space/time Environment   Site (RE)     Habitat 
-      0.481       0.121       0.109       0.089       0.047 
+This section computed a link-scale variance decomposition into unique and
+shared block components, and wrote fig7_variance_decomposition.png. It has
+been removed rather than corrected. The quantity was not invariant to the
+coding of the factor contrasts: refitting the identical model under sum-to-zero
+moved the management share from 0.481 to 0.391 and space/time from 0.121 to
+0.345, with identical fitted values and identical log-likelihood. Two further
+faults are recorded in DECISIONS.md.
 
-shared shares (2 x covariance / total, so unique + shared sums to 1):
-       block_1    block_2 shared_share
-18 Environment Space/time       0.0761
-3  Environment Management       0.0519
-2      Habitat Management       0.0323
-16  Management Space/time      -0.0237
-8  Environment    Habitat      -0.0125
-17     Habitat Space/time       0.0123
-22     Habitat  Site (RE)       0.0120
-23 Environment  Site (RE)       0.0047
-20   Site (RE) Space/time      -0.0006
-21  Management  Site (RE)       0.0000
-
-check: unique 0.847 + shared 0.152 = 1.000
-
-wrote fig7_variance_decomposition.png (now two panels)
+Q2 is answered in Step 2 instead, by out-of-sample predictive comparison and by
+a drop-one-block comparison at fixed dispersion. Neither claims to separate
+management from site identity, because in this design they are not separable.
 wrote fig12_effect_magnitudes.png
 wrote fig13_spatial_residuals.png
 

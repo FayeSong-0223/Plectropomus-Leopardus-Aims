@@ -157,32 +157,66 @@ write.csv(stab, file.path(OUT, "table4_protection_stability.csv"), row.names = F
 # ---------------------------------------------------------------------
 # 4. VARIANCE DECOMPOSITION ON THE LINK SCALE
 # ---------------------------------------------------------------------
-rule("4. HOW MUCH DOES EACH BLOCK CONTRIBUTE?")
-say("Q2 asks how much of the variation the covariates explain. An earlier version of")
-say("this analysis answered it by decomposing the variance of the linear predictor")
-say("into per-block shares. That answer has been withdrawn, for three reasons found")
-say("on audit and recorded in DECISIONS.md:")
+rule("4. HOW MUCH DOES EACH BLOCK CONTRIBUTE?  (Q2)")
+say("Q2 asks how much of the variation the covariates explain. Two earlier answers")
+say("have been withdrawn, and the reasons matter more than the numbers did.")
 say("")
-say("  1. It was not invariant to the coding of the factor contrasts. Refitting the")
-say("     identical model under sum-to-zero rather than treatment contrasts moved the")
-say("     management share from 0.481 to 0.391 and space/time from 0.121 to 0.345,")
-say("     with identical fitted values and identical log-likelihood. A quantity that")
-say("     moves when nothing about the fit moves is a property of the parameterisation,")
-say("     not of the data.")
-say("  2. It partitioned only the systematic part. The linear predictor has variance")
-say("     0.533; the negative binomial observation process contributes roughly 0.455")
-say("     more on the same scale. Around half of the variation sat outside the")
-say("     partition and the shares were silently conditional on that.")
-say("  3. The site block used the empirical variance of the shrunken random-effect")
-say("     predictions, 0.048, against an estimated variance component of 0.094. Site")
-say("     was understated by about half, and every other block inflated against it.")
+say("Withdrawn 1: a link-scale variance decomposition reporting management at 0.481.")
+say("  It was not invariant to the coding of the factor contrasts. Refitting the")
+say("  identical model under sum-to-zero moved management to 0.391 and space/time")
+say("  from 0.121 to 0.345, with identical fitted values and log-likelihood. It also")
+say("  partitioned only the systematic half of the variation, and used the shrunken")
+say("  random-effect predictions for the site block, understating it by about half.")
 say("")
-say("What replaces it is a drop-one-block comparison: refit the model without each")
-say("block in turn and record how far deviance explained falls, in percentage points.")
-say("This is invariant to contrast coding, it is a statement about the fitted model")
-say("rather than about total ecological variation, and it can carry an interval.")
-say("It is not additive: blocks share variation, so the drops do not sum to the")
-say("model's deviance explained and should never be presented as shares of it.\n")
+say("Withdrawn 2: a drop-one-block comparison in which management was measured by")
+say("  removing it from a model with no site random effect. That number, 14.09")
+say("  percentage points, is not a management contribution. With no random effect")
+say("  present, the management terms absorb every between-site difference that")
+say("  happens to align with zoning — habitat, history, location, anything fixed")
+say("  about a site. It measures confounding as much as management, and reporting")
+say("  it as management's share would have repeated the error it was meant to fix.")
+say("")
+say("What is reported instead is set out below. It begins with the thing that has to")
+say("be said plainly rather than measured.\n")
+
+# ---------------------------------------------------------------------
+say(strrep("-", 70))
+say("4a. WHAT IS NOT IDENTIFIABLE, AND WHY")
+say(strrep("-", 70))
+nvary <- sum(tapply(as.integer(d$NTR), d$SITE, function(z) length(unique(z))) > 1)
+say("Protection changes within ", nvary, " of ", nlevels(d$SITE), " sites.")
+say("")
+say("That single fact settles it. Protection is a fixed property of a site across the")
+say("whole series, so its entire contribution is between-site. A site random intercept")
+say("is also, by construction, entirely between-site. The two are estimated from the")
+say("same 71 degrees of freedom, and no partition of variance or of deviance can say")
+say("how much of a between-site difference belongs to zoning rather than to whatever")
+say("else distinguishes those sites. Drop management and the random effect absorbs it;")
+say("drop the random effect and management absorbs everything else.")
+say("")
+say("This is a limit of the design, not of the method, and it cannot be fixed by")
+say("choosing a better statistic. What CAN be estimated is the size of the protection")
+say("contrast, with an interval, which is Step 1 and Step 3's business — and how much")
+say("the model's ability to predict a site it has never seen depends on knowing that")
+say("site's zoning. That second question is answerable, and it is asked in 4c.")
+
+# ---------------------------------------------------------------------
+say("\n", strrep("-", 70))
+say("4b. DROP-ONE-BLOCK AT FIXED DISPERSION")
+say(strrep("-", 70))
+say("Each block is removed in turn and the fall in deviance explained recorded.")
+say("")
+say("One correction to how this was done before: nb() re-estimates theta for every")
+say("model, so a reduced model can absorb its lost structure into a smaller theta and")
+say("the two deviances are then measured on different scales, which makes the")
+say("difference uninterpretable. Every model below is fitted with theta held at the")
+say("full model's estimate, using negbin(), so all deviances share one scale.")
+say("")
+say("Management is included for completeness and is expected to be near zero for the")
+say("reason given in 4a. It is not evidence of no effect.\n")
+
+TH <- mA$family$getTheta(TRUE)
+say("theta from the full model, held fixed throughout: ", sprintf("%.4f", TH))
 
 blocks <- list(
   "Management (H1/Q3)"        = ". ~ . - REGION:NTR - NTR",
@@ -192,99 +226,135 @@ blocks <- list(
   "Site random effect (H4)"   = ". ~ . - s(SITE, bs = \"re\")",
   "Wave exposure (confounder)"= ". ~ . - EXPOSURE")
 
-fA   <- formula(mA)
-fNoRE <- update(fA, . ~ . - s(SITE, bs = "re"))
-
-gsafe <- function(fm, dat) tryCatch(gam(fm, family = nb(), data = dat, method = "REML"),
-                                    error = function(e) NULL)
-LABS <- c(names(blocks), "Management, no site random effect")
+fA <- formula(mA)
+gfix <- function(fm, dat) tryCatch(gam(fm, family = negbin(TH), data = dat, method = "REML"),
+                                   error = function(e) NULL)
 dev_drops <- function(dat) {
-  out <- rep(NA_real_, length(LABS))
-  full <- gsafe(fA, dat)
+  out <- rep(NA_real_, length(blocks))
+  full <- gfix(fA, dat)
   if (!is.null(full)) {
     de0 <- summary(full)$dev.expl
     for (i in seq_along(blocks)) {
-      m <- gsafe(update(fA, as.formula(blocks[[i]])), dat)
+      m <- gfix(update(fA, as.formula(blocks[[i]])), dat)
       if (!is.null(m)) out[i] <- (de0 - summary(m)$dev.expl) * 100
     }
   }
-  # Management is constant within a site, so with a site random effect in the
-  # model the two compete for the same between-site variation and dropping
-  # management simply hands its work to the random effect. To measure what
-  # management explains at all, it has to be dropped from a model where nothing
-  # else is absorbing site identity.
-  f0 <- gsafe(fNoRE, dat)
-  f1 <- gsafe(update(fNoRE, . ~ . - REGION:NTR - NTR), dat)
-  if (!is.null(f0) && !is.null(f1))
-    out[length(LABS)] <- (summary(f0)$dev.expl - summary(f1)$dev.expl) * 100
-  setNames(out, LABS)
+  setNames(out, names(blocks))
 }
-
 obs <- dev_drops(d)
-say("deviance explained, full model: ", sprintf("%.1f%%", summary(mA)$dev.expl * 100))
-say("deviance explained, same model without the site random effect: ",
-    sprintf("%.1f%%", summary(gam(fNoRE, family = nb(), data = d, method = "REML"))$dev.expl * 100))
+say("deviance explained at fixed theta, full model: ",
+    sprintf("%.1f%%", summary(gfix(fA, d))$dev.expl * 100))
 
-# Cluster bootstrap: sites are resampled with replacement, because observations
-# within a site are not independent. Resampled copies of the same site get
-# distinct labels so the random effect treats them as separate draws. The
-# resample indices are drawn up front under a fixed seed, so the result does not
-# depend on how the work is later divided between cores.
 NBOOT <- 200
 sites <- levels(d$SITE)
 set.seed(2)
 boot_sets <- lapply(seq_len(NBOOT), function(b) sample(sites, length(sites), replace = TRUE))
-
 make_boot <- function(sel) {
-  parts <- lapply(seq_along(sel), function(j) {
-    z <- d[d$SITE == sel[j], ]; z$SITE <- paste0(sel[j], "_", j); z
-  })
-  z <- do.call(rbind, parts); z$SITE <- factor(z$SITE); z
+  z <- do.call(rbind, lapply(seq_along(sel), function(j) {
+    w <- d[d$SITE == sel[j], ]; w$SITE <- paste0(sel[j], "_", j); w }))
+  z$SITE <- factor(z$SITE); z
 }
-
-say("\nbootstrapping ", NBOOT, " site-level resamples (", length(blocks) + 3,
-    " model fits each) — this is by far the slow part of the pipeline,")
-say("of the order of half an hour on two cores and a few minutes on eight")
-run_one <- function(b) dev_drops(make_boot(boot_sets[[b]]))
+say("\nbootstrapping ", NBOOT, " site-level resamples at ", length(blocks) + 1,
+    " fits each; resample indices are drawn up front under a fixed seed, so the")
+say("result does not depend on how the work is divided between cores")
 ncore <- max(1L, min(parallel::detectCores(), 4L))
 bt <- if (.Platform$OS.type == "unix" && ncore > 1L)
-        parallel::mclapply(seq_len(NBOOT), run_one, mc.cores = ncore) else
-        lapply(seq_len(NBOOT), run_one)
+        parallel::mclapply(seq_len(NBOOT), function(b) dev_drops(make_boot(boot_sets[[b]])),
+                           mc.cores = ncore) else
+        lapply(seq_len(NBOOT), function(b) dev_drops(make_boot(boot_sets[[b]])))
 bt <- do.call(rbind, lapply(bt, function(z)
-  if (is.numeric(z) && length(z) == length(LABS)) z else rep(NA_real_, length(LABS))))
+  if (is.numeric(z) && length(z) == length(blocks)) z else rep(NA_real_, length(blocks))))
 ok <- rowSums(is.na(bt)) == 0
 say("replicates that converged for every model: ", sum(ok), " of ", NBOOT)
 
 ci <- t(apply(bt[ok, , drop = FALSE], 2, quantile, c(0.025, 0.975), na.rm = TRUE))
-dd <- data.frame(block = LABS,
-                 dev_expl_drop_pp = round(as.numeric(obs), 2),
+dd <- data.frame(block = names(blocks), dev_expl_drop_pp = round(as.numeric(obs), 2),
                  lo = round(ci[, 1], 2), hi = round(ci[, 2], 2))
 dd$excludes_zero <- !(dd$lo < 0 & dd$hi > 0)
-dd <- dd[order(-dd$dev_expl_drop_pp), ]
+dd <- dd[order(-dd$dev_expl_drop_pp), ]; rownames(dd) <- NULL
 say("\n-- fall in deviance explained when each block is removed (percentage points) --")
 cap(dd)
 write.csv(dd, file.path(OUT, "table5_block_contributions.csv"), row.names = FALSE)
+say("\nConditional and non-additive. Blocks share variation, the drops do not sum to")
+say("anything, and they are not shares of total variation.")
 
-say("\nThese are conditional, non-additive measures of each block's contribution to")
-say("this model. They are not shares of total ecological variation and do not sum")
-say("to anything meaningful. A block whose interval includes zero is not")
-say("distinguishable from a block that contributes nothing.")
+# ---------------------------------------------------------------------
+say("\n", strrep("-", 70))
+say("4c. OUT-OF-SAMPLE: WHAT DOES KNOWING A NEW SITE'S ZONING BUY?")
+say(strrep("-", 70))
+say("The in-sample comparisons above cannot separate management from site identity")
+say("because both are fitted to the same sites. Prediction to a site the model has")
+say("never seen removes that overlap: for an unseen site there is no random intercept")
+say("to estimate, so the fixed effects have to carry the prediction alone, and")
+say("management either helps or it does not.")
 say("")
-say("The management row is the one that repays reading carefully, and it is the")
-say("honest answer to Q2. Protection is fixed for the whole history of a site, so")
-say("in a model that already gives every site its own intercept, management and the")
-say("random effect are competing to explain the same between-site differences.")
-say("Remove management and the random effect simply takes the work over, which is")
-say("why its drop sits at or below zero. That is not evidence of no effect — Step 3")
-say("shows the Whitsunday estimate is stable across every specification — it means")
-say("deviance explained cannot separate the two, and any method that appears to")
-say("separate them is reporting an artefact of how the model was parameterised.")
-say("The last row measures management where it is identifiable: in a model with no")
-say("site random effect at all.")
+say("Ten folds, split by SITE so that a site is never in both training and test.")
+say("Each model is fitted on the training sites and scored on the held-out sites by")
+say("negative binomial log predictive density, with the random effect set to zero for")
+say("unseen sites and each model using its own theta — a predictive comparison is")
+say("between complete distributions, so re-estimating theta is correct here.")
 say("")
-say("H4 said unexplained site-level variation would be large relative to the")
-say("measured covariates. On these numbers it is: the site random effect is the")
-say("largest single contributor, and no covariate block approaches it.")
+say("This measures predictive contribution, not a share of variance, and it does not")
+say("license a causal reading: a zoning label may predict a new site well because of")
+say("what protection does, or because of what protection is correlated with.\n")
+
+K <- 10
+set.seed(7)
+fold_of_site <- setNames(sample(rep_len(1:K, length(sites))), sites)
+d$.fold <- fold_of_site[as.character(d$SITE)]
+
+# The site random effect is deliberately NOT among the blocks compared here. It is
+# already excluded from every prediction, because an unseen site has no intercept to
+# estimate, so a "drop the random effect" row would not measure site identity's
+# predictive contribution and would invite exactly the comparison this section cannot
+# support — management against site identity. That comparison is not available from
+# this design by any route (4a).
+cv_blocks <- blocks[names(blocks) != "Site random effect (H4)"]
+cv_models <- c(list("Full model" = ". ~ ."), cv_blocks)
+lpd <- matrix(NA_real_, nrow = nrow(d), ncol = length(cv_models),
+              dimnames = list(NULL, names(cv_models)))
+for (k in 1:K) {
+  tr <- d[d$.fold != k, ]; te <- d[d$.fold == k, ]
+  tr <- droplevels(tr)
+  for (mi in seq_along(cv_models)) {
+    fm <- if (names(cv_models)[mi] == "Full model") fA else update(fA, as.formula(cv_models[[mi]]))
+    fit <- tryCatch(gam(fm, family = nb(), data = tr, method = "REML"), error = function(e) NULL)
+    if (is.null(fit)) next
+    # exclude the site random effect: unseen sites have no intercept to borrow
+    trm <- predict(fit, newdata = transform(te, SITE = tr$SITE[1]), type = "terms")
+    re_col <- grep("s\\(SITE\\)", colnames(trm))
+    eta <- attr(trm, "constant") + rowSums(trm[, setdiff(seq_len(ncol(trm)), re_col), drop = FALSE])
+    th_k <- fit$family$getTheta(TRUE)
+    lpd[d$.fold == k, mi] <- dnbinom(te$count, size = th_k, mu = exp(eta), log = TRUE)
+  }
+}
+base_lpd <- lpd[, "Full model"]
+cvres <- do.call(rbind, lapply(names(cv_blocks), function(nm) {
+  dif <- base_lpd - lpd[, nm]
+  dif <- dif[is.finite(dif)]
+  data.frame(block = nm, delta_lpd = round(sum(dif), 1),
+             se = round(sqrt(length(dif)) * sd(dif), 1),
+             per_obs = round(mean(dif), 4))
+}))
+cvres$z <- round(cvres$delta_lpd / cvres$se, 2)
+cvres <- cvres[order(-cvres$delta_lpd), ]; rownames(cvres) <- NULL
+say("Total log predictive density of the full model across all held-out sites: ",
+    sprintf("%.1f", sum(base_lpd[is.finite(base_lpd)])))
+say("\n-- loss in log predictive density when each block is removed --")
+say("   (positive = the full model predicts unseen sites better without that block")
+say("    removed; |z| above about 2 is the conventional threshold)\n")
+cap(cvres)
+write.csv(cvres, file.path(OUT, "table15_cv_block_contributions.csv"), row.names = FALSE)
+
+say("\nHow to read this, and how not to.")
+say("  It is a predictive statement: knowing a new site's zoning improves the")
+say("  prediction of its counts by this much on the log scale. It does not partition")
+say("  variance, the entries do not sum to anything, and a large value is not evidence")
+say("  that management contributes more variance than site identity — that comparison")
+say("  is unavailable in this design by any route, as 4a sets out.")
+say("  It is not causal. Zoning may predict an unseen site well because of what")
+say("  protection does, or because of whatever the zoning process selected for. This")
+say("  analysis cannot tell those apart, and nothing here should be read as trying to.")
 
 # ---------------------------------------------------------------------
 # 5. FIGURES
@@ -301,6 +371,7 @@ st <- summary(mA)$s.table
 for (i in seq_along(sm)) {
   j <- match(sm[i], rownames(st))
   plot(mA, select = which(sapply(mA$smooth, function(z) z$label) == sm[i]),
+       unconditional = TRUE,   # bands must match the intervals reported in Step 4
        shade = TRUE, shade.col = adjustcolor(TEAL, 0.20), col = TEAL, lwd = 2,
        xlab = lab[i], ylab = "Effect on log density", rug = TRUE,
        main = sprintf("%s   edf %.2f, p %s", letters[i],
@@ -410,7 +481,8 @@ par(mfrow = c(1, 2), mar = c(3.7, 3.9, 2.5, 0.8)); base_par()
 for (mm in list(list(m = mA,  t = "a  All data"),
                 list(m = mA2, t = "b  Whitsunday 2017 removed"))) {
   k <- which(sapply(mm$m$smooth, function(z) z$label) == "s(maxDHW)")
-  plot(mm$m, select = k, shade = TRUE, shade.col = adjustcolor(TEAL, 0.20),
+  plot(mm$m, select = k, unconditional = TRUE,
+       shade = TRUE, shade.col = adjustcolor(TEAL, 0.20),
        col = TEAL, lwd = 2, rug = TRUE, ylim = c(-1.2, 1.2),
        xlab = "Max degree heating weeks", ylab = "Effect on log density",
        main = mm$t, font.main = 1, cex.main = 1.0, adj = 0)

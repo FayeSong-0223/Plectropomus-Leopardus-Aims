@@ -11,10 +11,17 @@ Ziqi (Faye) Song
 
 On Whitsunday inshore reefs, sites inside no-take zones hold roughly **three times**
 the density of *P. leopardus* found on fished sites. In the Palm region, 200 km away
-under the same zoning framework, **no difference is detectable**.
+under the same zoning framework, **no difference is detectable and the specifications
+disagree**.
 
-The Whitsunday contrast survives every check applied to it. The Palm null does not
-quite:
+This is a robust association, not a measured effect of protection. Every specification
+tried leaves the Whitsunday estimate where it is, and adjusting for wave exposure or
+restricting to sheltered sites does not weaken it — so wave exposure is not the
+explanation. Reserve placement was not random, though, and no observational check here
+can establish that whatever else distinguishes the zoned sites is innocuous.
+
+Every check applied leaves the Whitsunday estimate where it is. Palm does not hold
+together as a null:
 
 | | Full data | 13 leave-one-out refits | 5 specifications | Excludes 1? |
 |---|---:|---|---|---|
@@ -29,48 +36,62 @@ scale.
 
 The one exception matters and is not buried. Restricted to sheltered sites — the
 specification that handles the exposure confound by design rather than by adjustment —
-Palm NTR 1987 is **0.47 (0.24–0.93)**, significantly *below* 1, where every other
+Palm NTR 1987 is **0.47 (0.23–0.97)**, significantly *below* 1, where every other
 specification puts it between 1.1 and 1.4. It rests on six fished and five reserve
 sites. The plan's own rule for this check was to distrust the adjusted estimate when
 the restriction disagrees, so the honest reading is that Palm is unresolved rather than
-null. Whitsunday is unaffected: the same restriction gives 2.58 (1.56–4.25).
+null. Whitsunday is unaffected: the same restriction gives 2.58 (1.54–4.32).
 
 Nothing here is causal. Protection was not assigned at random.
 
 ## What else the analysis found
 
-**Site identity explains more than any measured covariate.** Dropping each block from
-the model in turn and recording the fall in deviance explained, the site random effect
-is the largest contributor that can be separated at all. Management cannot be separated
-from it — protection is fixed for a site's whole history, so removing it just hands the
-work to the random effect. Measured where it is identifiable, in a model with no random
-effect, management gives the largest drop of any block. Both numbers are in the report,
-section 6, with bootstrap intervals. An earlier version of this analysis reported that
-"management explains 48.1%"; that figure has been withdrawn as an artefact of
-parameterisation — see `DECISIONS.md`.
+**How much does management explain? This design cannot say.** Protection changes
+within 0 of 71 sites, so its entire contribution is between-site — and a site random
+intercept is also entirely between-site. The two are estimated from the same degrees of
+freedom, and no partition of variance or deviance can say how much of a between-site
+difference belongs to zoning rather than to whatever else distinguishes those sites.
+That is a limit of the design, not of the method, and no better statistic fixes it. Two
+earlier attempts to put a number on it have been withdrawn: a variance share of 48.1%
+that turned out to depend on the coding of the factor contrasts, and a deviance drop
+measured in a model with no random effect, which conflated management with everything
+fixed about a site. Both are documented in `DECISIONS.md`.
+
+What is reported instead is a drop-one-block comparison at fixed dispersion —
+descriptive, non-additive, not variance shares — and out-of-sample prediction to sites
+the model has never seen, which is the one comparison the overlap does not spoil.
 
 **Habitat does not predict density.** None of rugosity (p = 0.097), live hard coral
 (p = 0.375) or depth (p = 0.099) is significant, and none survives a multiplicity
 correction within the habitat family. Expressed as a magnitude, rugosity briefly
 appeared to exclude 1 — but splitting it into between-site and within-site components
-shows neither does: 1.28 (0.94–1.75) and 1.13 (0.98–1.30). The pooled estimate looked
+shows neither does: 1.28 (0.88–1.85) and 1.13 (0.98–1.31). The pooled estimate looked
 precise only because it averaged two weakly estimated components, and it stops
 excluding 1 in any case once smoothing-parameter uncertainty is admitted.
 
-**Something happened between 2009 and 2012 that the model cannot see.** Residuals
-within a site are uncorrelated at every survey gap except one. At a three-year
-separation they correlate −0.376 — a reversal, and far stronger than the −0.18 a site
-random intercept induces mechanically. It is carried by the 2009-to-2012 interval in
-both regions and holds under all 20 randomisations. Cyclone exposure is recorded only
-at survey points, so a disturbance inside a three-year gap is invisible to the
-covariate. This is that limitation made concrete rather than merely stated.
+**The negative binomial does not fully account for the zeros.** Against a parametric
+bootstrap that refits every replicate and redraws the site effects from their estimated
+distribution, the data hold about 16 more zeros than the model expects, against a
+simulated distribution centred near 1 (p = 0.003, 300 replicates). It is a limitation on
+the distributional form — a hurdle or zero-inflated model belongs in any second version.
+It does not drive the result: excess zeros inflate apparent overdispersion, which widens
+intervals rather than narrowing them.
 
-**There are more zeros than the model generates.** 52 observed against a simulated
-median of 35 from the fitted model (95% interval 25–46, p = 0.004), concentrated in
-Palm as the plan predicted. It is a real limitation. It does not manufacture the
-protection result — excess zeros inflate apparent overdispersion, which widens
-intervals rather than narrowing them, and trimming the one mostly-zero site leaves
-Whitsunday at 3.27 (2.31–4.63).
+**Residual temporal correlation: unresolved.** The most negative residual correlation
+across the eleven survey gaps is −0.376, against a simulated null centred on −0.259
+(95% interval −0.452 to −0.176), giving p = 0.080. That sits between 0.01 and 0.10 and
+is reported as uncertain rather than pushed across a threshold. An earlier version of
+this analysis called it a clear finding at p < 0.001 and offered an explanation for it;
+that came from testing against zero rather than against the correlation a site random
+intercept induces, from picking the strongest of eleven gaps after seeing them, and from
+simulating without redrawing the site effects. Correcting all three is what moved it into
+the uncertain band. No mechanism is proposed: there is no covariate here that would
+distinguish one.
+
+**Neither diagnostic moves the protection estimate.** Trimming the mostly-zero site gives
+3.27 (2.31–4.63); adding a site-level random slope on year gives 3.27 (2.10–5.08), the
+wider interval being the cost of the extra flexibility rather than a change in the
+estimate.
 
 **Possible residual spatial structure in Whitsunday — not established.** Moran's I on
 site-level residuals is positive in Whitsunday under all 20 randomisations tested
@@ -115,6 +136,11 @@ site random effect (concurvity 1.000). It is fitted as a linear term instead, wh
 gives identical estimates with no aliasing. Omitting it entirely raises the Whitsunday
 estimate to 3.62, so it is doing real adjustment work and is kept.
 
+**Protection changes within none of the 71 sites.** This is why Q2 has no answer in
+percentage terms. Anything fixed about a site — its zoning, its history, its position —
+is estimated from the same 71 between-site degrees of freedom as the site random
+intercept, and no method separates them.
+
 **The density scaling constant is not uniform** — 0.6666 in 2007–2017, 0.6660 in 2018.
 Deriving it per year recovers integers exactly. Assuming one value corrupts a year
 silently.
@@ -132,7 +158,7 @@ years, so pooled biomass is not a usable proxy for one species.
 | `coral_trout_stage2_step2.R` | Habitat, environment, block contributions with bootstrap intervals. Figures 6–9. |
 | `coral_trout_stage2_step3.R` | Influence analysis and sensitivity suite. Figures 10–11. |
 | `coral_trout_stage2_step4.R` | Effect magnitudes, Moran's I, variable dictionary, within-between split. Figures 12–14. |
-| `coral_trout_stage2_step5.R` | Concurvity, basis dimension, seed stability, depth specification, zero counts, temporal autocorrelation, multiplicity. Figures 15–16. |
+| `coral_trout_stage2_step5.R` | Concurvity, basis dimension, seed stability, depth specification, goodness-of-fit bootstrap, multiplicity, observed vs fitted. Figures 15–16. |
 | `DECISIONS.md` | Every change to the analysis plan, and what prompted it. |
 | `outputs/tables.md` | All numeric tables. |
 | `outputs/*_log.txt` | Full console logs — every number in the report. |
@@ -153,10 +179,11 @@ Run from the project directory, with the two source CSVs in `data/`. A clean
 end-to-end run from an empty `outputs/` reproduces every table, log and figure byte for
 byte, verified by running it twice from empty.
 
-Step 2 is slow — it bootstraps 200 site-level resamples at nine model fits each, which
-is roughly half an hour on two cores and a few minutes on eight. Everything else takes
-seconds. The resample indices are drawn up front under a fixed seed, so the answer does
-not depend on how many cores do the work.
+Two steps are slow. Step 2 bootstraps 200 site-level resamples at seven model fits each
+and then cross-validates over ten site-blocked folds; Step 5 simulates and refits 300
+times. Together they take roughly 50 minutes on two cores and a good deal less on eight.
+Everything else takes seconds. All resample indices and simulation seeds are drawn up
+front under fixed seeds, so the answer does not depend on how many cores do the work.
 
 **No packages need installing.** The analysis uses base R and `mgcv`, which ships with
 every R installation. That is not the same as having no versions to reconcile: mgcv's

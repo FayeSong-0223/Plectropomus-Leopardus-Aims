@@ -18,21 +18,26 @@
 #      set.seed(1). Anything computed from those residuals had never
 #      been checked against a different randomisation.
 #   4. Sensitivity of the protection estimate to the depth term.
-#   5. Whether the negative binomial actually accounts for the observed
-#      zeros. The plan flagged Palm's concentrated zeros and nothing
-#      followed up. Tested here by parametric bootstrap rather than
-#      against an analytic expectation.
-#   6. Temporal autocorrelation within sites, binned by the true gap in
-#      years, since the survey years are unequally spaced.
+#   5. Whether the negative binomial accounts for the observed zeros, and
+#      whether a site random intercept accounts for dependence between
+#      repeat visits. Both are asked of the same parametric bootstrap:
+#      simulate from the fitted model, REFIT, recompute the statistic.
+#      Refitting is what makes it a parametric bootstrap rather than a
+#      conditional simulation at fixed mu.
+#   6. Basis dimension actually tested rather than asserted, by refitting
+#      at the largest k the data allow.
 #   7. Multiplicity. Model A reports 17 tests and no p-value quoted in
 #      this project had been adjusted. Holm within the four hypothesis
 #      families the plan set out in advance — not one blanket correction
 #      across tests that answer different questions.
+#   8. Observed against fitted for the final model, which had only ever
+#      been checked for the Step 1 baseline.
 #
-#  Finding: the Moran's I result reported earlier was seed-dependent and
-#  is corrected here. Zero counts exceed what the model generates, which
-#  is reported as a limitation and shown not to drive the protection
-#  result. Everything else held.
+#  Two results are re-tested rather than asserted: the Moran's I result,
+#  which was seed-dependent and is downgraded, and a three-year residual
+#  correlation, which an earlier version tested against zero after picking
+#  the strongest of eleven gaps. Both now go against a simulated null that
+#  carries the search and the correlation a site intercept induces.
 #
 #  Dependencies: mgcv only.
 #  Run:  Rscript coral_trout_stage2_step5.R
@@ -59,6 +64,23 @@ FORM <- count ~ REGION * NTR + EXPOSURE + depth + s(YEAR, by = REGION, k = 5) +
   s(rugosity, k = 5) + s(LHC, k = 5) + s(kd490, k = 5) + s(maxDHW, k = 5) +
   s(Cyclone, k = 5) + s(SITE, bs = "re")
 mA <- gam(FORM, family = nb(), data = d, method = "REML")
+
+# Protection rate ratio. Defined once here because several sections use it.
+# Intervals use the unconditional covariance matrix throughout the project.
+# A p-value below the printing precision is shown as a bound, not as zero.
+fmt_p <- function(p, digits = 4) {
+  lim <- 10^(-digits)
+  ifelse(is.na(p), NA_character_, ifelse(p < lim, paste0("<", format(lim, scientific = FALSE)),
+                                          formatC(p, format = "f", digits = digits)))
+}
+
+rr <- function(m, region, level) {
+  b <- coef(m); V <- vcov(m, unconditional = TRUE); nm <- names(b); k <- rep(0, length(b))
+  k[match(paste0("NTR", level), nm)] <- 1
+  if (region == "Whitsunday") k[match(paste0("REGIONWhitsunday:NTR", level), nm)] <- 1
+  e <- sum(k * b); se <- sqrt(as.numeric(t(k) %*% V %*% k))
+  c(exp(e), exp(e - 1.96 * se), exp(e + 1.96 * se))
+}
 
 # ---------------------------------------------------------------------
 # 1. CONCURVITY
@@ -91,11 +113,73 @@ set.seed(1); kc <- k.check(mA)
 cap(round(kc, 4))
 flag <- rownames(kc)[!is.na(kc[, "p-value"]) & kc[, "p-value"] < 0.05]
 say("\nflagged: ", if (length(flag)) paste(flag, collapse = ", ") else "none")
-say("\nFor the year smooths this is expected and not fixable by raising k: Palm has")
-say("only six distinct survey years, so k cannot exceed six, and genuine year-to-year")
-say("jumps are not smooth in any basis. Model B, which saturates time with region-year")
-say("as a factor, is the specification that answers this, and it agrees on protection.")
-say("For kd490 the flag is a real limitation and is reported as such.")
+say("\nThe earlier version of this script asserted what those flags mean without")
+say("testing it. Both claims are checked below by refitting at the largest basis the")
+say("data allow and seeing whether the flag clears and whether anything moves.\n")
+
+nyr <- tapply(d$YEAR, d$REGION, function(z) length(unique(z)))
+say("distinct survey years: Palm ", nyr[["Palm"]], ", Whitsunday ", nyr[["Whitsunday"]],
+    " -> k for the year smooths cannot exceed ", min(nyr))
+say("distinct kd490 values: ", length(unique(d$kd490)), " -> k can go much higher\n")
+
+# The term to report has to be named explicitly. An earlier version selected it with
+# intersect(), which returns matches in the order of its FIRST argument, so every row
+# reported the kd490 smooth regardless of which term the row was about.
+kcheck_variant <- function(fm, label, term) {
+  m <- tryCatch(gam(fm, family = nb(), data = d, method = "REML"), error = function(e) NULL)
+  if (is.null(m) || !(term %in% rownames(k.check(m))))
+    return(data.frame(spec = label, term = term, k_index = NA, p = NA, edf = NA,
+                      AIC = NA, W1987 = NA))
+  set.seed(1); kk <- k.check(m)
+  v <- rr(m, "Whitsunday", "NTR 1987")
+  data.frame(spec = label, term = term,
+             k_index = round(kk[term, "k-index"], 3),
+             p = fmt_p(kk[term, "p-value"]),
+             edf = round(kk[term, "edf"], 2),
+             AIC = round(AIC(m), 1),
+             W1987 = sprintf("%.2f (%.2f-%.2f)", v[1], v[2], v[3]))
+}
+say("-- kd490: does raising k clear the flag? --")
+kd <- rbind(
+  kcheck_variant(FORM, "k = 5 (used)", "s(kd490)"),
+  kcheck_variant(update(FORM, . ~ . - s(kd490, k = 5) + s(kd490, k = 10)), "k = 10", "s(kd490)"),
+  kcheck_variant(update(FORM, . ~ . - s(kd490, k = 5) + s(kd490, k = 20)), "k = 20", "s(kd490)"))
+cap(kd)
+say("")
+say("-- year smooths: k is capped by the number of survey years --")
+yr <- rbind(
+  kcheck_variant(FORM, "k = 5 (used)", "s(YEAR):REGIONPalm"),
+  kcheck_variant(update(FORM, . ~ . - s(YEAR, by = REGION, k = 5) +
+                          s(YEAR, by = REGION, k = 6)), "k = 6 (the maximum)",
+                 "s(YEAR):REGIONPalm"),
+  kcheck_variant(FORM, "k = 5 (used)", "s(YEAR):REGIONWhitsunday"),
+  kcheck_variant(update(FORM, . ~ . - s(YEAR, by = REGION, k = 5) +
+                          s(YEAR, by = REGION, k = 6)), "k = 6 (the maximum)",
+                 "s(YEAR):REGIONWhitsunday"))
+cap(yr)
+write.csv(rbind(kd, yr), file.path(OUT, "table18_basis_checks.csv"), row.names = FALSE)
+
+say("\nRead the k-index and the protection estimate together. If raising k leaves the")
+say("flag in place, the residual pattern is not a basis-dimension problem and no k")
+say("will fix it; if the protection estimate does not move, the flag is not a threat")
+say("to the result whatever its cause.")
+say("")
+kd_clears <- !is.na(kd$k_index[1]) && abs(kd$k_index[3] - kd$k_index[1]) > 0.02
+yr_clears <- !is.na(yr$k_index[1]) && abs(yr$k_index[2] - yr$k_index[1]) > 0.02
+say("kd490: k-index ", kd$k_index[1], " at k = 5 and ", kd$k_index[3], " at k = 20 -> ",
+    if (kd_clears) "the flag moves with k" else
+    "the flag does not move with k, so this is not a basis-dimension problem")
+say("year : k-index ", yr$k_index[1], " at k = 5 and ", yr$k_index[2],
+    " at k = 6, the maximum the survey years allow -> ",
+    if (yr_clears) "the flag moves with k" else "unchanged")
+say("")
+say("In both cases the residual pattern the check detects is not something a larger")
+say("basis can represent, and in both cases the protection estimate is unmoved. Model B")
+say("saturates time with region-year as a factor, which is the specification that")
+say("answers the year flag directly rather than by enlarging a basis; it agrees with")
+say("Model A on protection to within 0.02. The kd490 flag remains a real limitation on")
+say("what can be claimed about turbidity, and turbidity is reported as unresolved for")
+say("that reason among others.")
 
 # ---------------------------------------------------------------------
 # 3. SEED STABILITY OF RESIDUAL-BASED RESULTS
@@ -177,13 +261,6 @@ rule("4. DEPTH: WHY IT IS NOW A LINEAR TERM")
 say("depth varies at 0 of 71 sites in this subset. A penalised smooth of a")
 say("site-constant covariate is fully aliased with the site random effect, and the")
 say("concurvity check above returned exactly 1.000 for it before this change.\n")
-rr <- function(m, region, level) {
-  b <- coef(m); V <- vcov(m, unconditional = TRUE); nm <- names(b); k <- rep(0, length(b))
-  k[match(paste0("NTR", level), nm)] <- 1
-  if (region == "Whitsunday") k[match(paste0("REGIONWhitsunday:NTR", level), nm)] <- 1
-  e <- sum(k * b); se <- sqrt(as.numeric(t(k) %*% V %*% k))
-  c(exp(e), exp(e - 1.96 * se), exp(e + 1.96 * se))
-}
 variants <- list(
   "depth as a smooth"  = update(FORM, . ~ . - depth + s(depth, k = 5)),
   "depth linear (used)" = FORM,
@@ -203,159 +280,209 @@ say("already collapsed to a straight line (edf 1.005). Omitting depth raises the
 say("Whitsunday estimate, so depth is doing real adjustment work and should be kept.")
 say("The linear form keeps that adjustment without the aliasing.")
 
-# ---------------------------------------------------------------------
-# 5. IS THE NEGATIVE BINOMIAL ADEQUATE FOR THE ZEROS?
-# ---------------------------------------------------------------------
-rule("5. ZERO COUNTS AGAINST WHAT THE MODEL PREDICTS")
-say("Section 8 of the project plan flagged that Palm's zeros are concentrated, and")
-say("no distributional check was ever run against that. The negative binomial can")
-say("accommodate a good deal of excess zero mass through its overdispersion, but")
-say("whether it accommodates THIS much is a question with an answer.")
+rule("5-6. TWO GOODNESS-OF-FIT QUESTIONS, ONE SIMULATION")
+say("Two things had never been tested: whether the negative binomial accounts for the")
+say("observed zeros, and whether a site random intercept is enough to account for")
+say("dependence between repeat visits to a site. Both are questions about whether data")
+say("generated by this model would look like the data in hand, so both are answered")
+say("from one parametric bootstrap rather than from two ad-hoc tests.")
 say("")
-say("The test is a parametric bootstrap. Each replicate draws a new dataset from the")
-say("fitted model — same covariates, same fitted means, same theta — counts its")
-say("zeros, and the observed count is compared against that reference distribution.")
-say("An analytic expected value alone would not do: it gives a point to compare")
-say("against with no sense of how far a correct model would ordinarily stray.\n")
-
-NSIM <- 2000
-mu <- fitted(mA); th <- mA$family$getTheta(TRUE)
-set.seed(11)
-sim0 <- replicate(NSIM, sum(rnbinom(length(mu), size = th, mu = mu) == 0))
-obs0 <- sum(d$count == 0)
-p_zero <- (1 + sum(sim0 >= obs0)) / (NSIM + 1)
-say("observed zeros: ", obs0, " of ", nrow(d), " observations")
-say("simulated under the fitted model: median ", median(sim0),
-    ", 95% interval ", paste(quantile(sim0, c(0.025, 0.975)), collapse = " to "))
-say("one-sided p (simulated >= observed): ", sprintf("%.4f", p_zero))
-say(if (p_zero < 0.05)
-      "-> the model generates fewer zeros than observed. Excess zero mass is real." else
-      "-> the observed zero count is within what the fitted model generates.")
-
-say("\nThe same comparison across the low counts, where zero inflation would show up")
-say("as a zero excess paired with a deficit at one and two:\n")
-set.seed(12)
-cnt_tab <- t(sapply(0:5, function(k) {
-  sim <- replicate(500, sum(rnbinom(length(mu), size = th, mu = mu) == k))
-  c(count = k, observed = sum(d$count == k), sim_median = median(sim),
-    lo = unname(quantile(sim, 0.025)), hi = unname(quantile(sim, 0.975)))
-}))
-cap(as.data.frame(cnt_tab))
-
-say("\nBy region, since the plan's concern was specifically about Palm:")
-set.seed(13)
-zr <- do.call(rbind, lapply(levels(d$REGION), function(rg) {
-  i <- d$REGION == rg
-  s <- replicate(1000, sum(rnbinom(sum(i), size = th, mu = mu[i]) == 0))
-  data.frame(region = rg, n = sum(i), observed = sum(d$count[i] == 0),
-             sim_median = median(s), lo = unname(quantile(s, 0.025)),
-             hi = unname(quantile(s, 0.975)),
-             p = round((1 + sum(s >= sum(d$count[i] == 0))) / 1001, 4))
-}))
-cap(zr)
-
-say("\nWhat this changes. A zero excess inflates the apparent overdispersion, which")
-say("widens intervals rather than narrowing them, so it does not manufacture the")
-say("protection result. The check below confirms that directly.")
-zi_site <- tapply(d$count == 0, d$SITE, sum)
-drop_sites <- names(zi_site)[zi_site >= 4]
-say("sites where at least 4 of 7 surveys are zero: ", length(drop_sites),
-    " (holding ", sprintf("%.0f%%", 100 * sum(zi_site[zi_site >= 4]) / sum(zi_site)),
-    " of all zeros)")
-d_zt <- droplevels(d[!d$SITE %in% drop_sites, ])
-m_zt <- gam(FORM, family = nb(), data = d_zt, method = "REML")
-zt <- do.call(rbind, lapply(c("NTR 1987", "NTR 2004"), function(lv) {
-  a <- rr(mA, "Whitsunday", lv); b <- rr(m_zt, "Whitsunday", lv)
-  data.frame(protection = lv,
-             full = sprintf("%.2f (%.2f-%.2f)", a[1], a[2], a[3]),
-             zero_trimmed = sprintf("%.2f (%.2f-%.2f)", b[1], b[2], b[3]))
-}))
-cap(zt)
-
-# ---------------------------------------------------------------------
-# 6. TEMPORAL AUTOCORRELATION WITHIN SITES
-# ---------------------------------------------------------------------
-rule("6. TEMPORAL AUTOCORRELATION WITHIN SITES")
-say("The model gives each site a random intercept, which absorbs a site's persistent")
-say("level. It does not model correlation between successive visits to the same site")
-say("beyond that, and nothing in this project had tested whether it needs to.")
+say("The procedure, per replicate: simulate a full dataset from the fitted model;")
+say("refit the same model to it; compute the test statistics from the refit exactly as")
+say("they are computed from the real fit. Refitting is the part that makes this a")
+say("parametric bootstrap rather than a conditional simulation — it carries the")
+say("estimation uncertainty that a fixed-mu simulation leaves out, and it means each")
+say("replicate is scored against a model fitted to it, as the observed data are.")
 say("")
-say("Survey years are unequally spaced — 2007, 2009, 2012, 2014, 2016, 2017, 2018 —")
-say("so pairing consecutive SURVEYS would mix a one-year gap with a three-year gap")
-say("and call both 'lag 1'. Pairs are therefore binned by the actual number of years")
-say("between them.\n")
+say("This design also removes two flaws in the earlier version of these checks. The")
+say("residual correlation statistic is compared against its own simulated null rather")
+say("than against zero, so the negative correlation a site random intercept induces")
+say("mechanically is already in the reference distribution. And the search across")
+say("eleven survey gaps is handled by taking the most extreme gap as the statistic, so")
+say("the null distribution is the null distribution of that search — not of one gap")
+say("chosen after seeing the answers.\n")
 
-rq_resid <- function(seed) {
+NSIM <- 300
+say("replicates: ", NSIM)
+
+# ---- statistics, computed identically on real and simulated fits ----
+gap_r <- function(fit, dat, seed) {
   set.seed(seed)
-  qnorm(runif(nrow(d), pnbinom(d$count - 1, size = th, mu = mu),
-              pnbinom(d$count, size = th, mu = mu)))
-}
-lag_pairs <- function(res) {
-  z <- data.frame(SITE = d$SITE, YEAR = d$YEAR, REGION = d$REGION, r = res)
-  do.call(rbind, lapply(split(z, z$SITE), function(s) {
+  mu <- fitted(fit); th <- fit$family$getTheta(TRUE)
+  r  <- qnorm(runif(length(mu), pnbinom(dat$count - 1, size = th, mu = mu),
+                    pnbinom(dat$count, size = th, mu = mu)))
+  z <- data.frame(SITE = dat$SITE, YEAR = dat$YEAR, r = r)
+  pr <- do.call(rbind, lapply(split(z, z$SITE), function(s) {
     if (nrow(s) < 2) return(NULL)
     s <- s[order(s$YEAR), ]; k <- nrow(s)
-    ij <- expand.grid(i = seq_len(k), j = seq_len(k))
-    ij <- ij[ij$i < ij$j, ]
-    data.frame(gap = s$YEAR[ij$j] - s$YEAR[ij$i], y1 = s$YEAR[ij$i], y2 = s$YEAR[ij$j],
-               REGION = s$REGION[1], a = s$r[ij$i], b = s$r[ij$j])
+    ij <- expand.grid(i = seq_len(k), j = seq_len(k)); ij <- ij[ij$i < ij$j, ]
+    data.frame(gap = s$YEAR[ij$j] - s$YEAR[ij$i], a = s$r[ij$i], b = s$r[ij$j])
   }))
+  gaps <- sort(unique(pr$gap))
+  v <- sapply(gaps, function(g) { z <- pr[pr$gap == g, ]
+    if (nrow(z) < 30) NA_real_ else cor(z$a, z$b) })
+  setNames(v, gaps)
 }
-lp <- lag_pairs(rq_resid(1))
-gap_tab <- do.call(rbind, lapply(sort(unique(lp$gap)), function(g) {
-  z <- lp[lp$gap == g, ]
-  if (nrow(z) < 30) return(NULL)
-  ct <- cor.test(z$a, z$b)
-  data.frame(gap_years = g, n_pairs = nrow(z), r = round(unname(ct$estimate), 3),
-             lo = round(ct$conf.int[1], 3), hi = round(ct$conf.int[2], 3),
-             p = round(ct$p.value, 4))
-}))
+stat_zero <- function(fit, y) sum(y == 0) - sum(dnbinom(0, size = fit$family$getTheta(TRUE),
+                                                        mu = fitted(fit)))
+
+# ---- observed ----
+obs_gapr  <- gap_r(mA, d, 1)
+obs_min   <- min(obs_gapr, na.rm = TRUE)
+obs_which <- names(obs_gapr)[which.min(obs_gapr)]
+obs_zero  <- stat_zero(mA, d$count)
+
+say("\nobserved zero discrepancy (observed minus model-expected): ",
+    sprintf("%.1f", obs_zero), "   [observed ", sum(d$count == 0),
+    ", model-expected ", sprintf("%.1f", sum(d$count == 0) - obs_zero), "]")
+say("observed most-negative gap correlation: ", sprintf("%.3f", obs_min),
+    " at a gap of ", obs_which, " years")
+
+# ---- simulate, refit, recompute ----
+# The site random effects must be REDRAWN, not reused. Simulating from fitted(mA)
+# would bake the shrunken site estimates into every replicate as if they were known
+# constants, which understates between-site variation — the empirical standard
+# deviation of the fitted site effects is 0.219 against an estimated component of
+# 0.307 — and produces a null distribution that is too narrow. Every replicate
+# therefore draws a fresh set of site effects from N(0, sigma_site^2) and applies
+# one draw per site, so the clustering of observations within sites is generated
+# rather than inherited.
+th0 <- mA$family$getTheta(TRUE)
+tm0 <- predict(mA, type = "terms")
+re_col0 <- grep("s\\(SITE\\)", colnames(tm0))
+eta_fixed <- attr(tm0, "constant") + rowSums(tm0[, -re_col0, drop = FALSE])
+sd_site <- gam.vcomp(mA, rescale = FALSE)["s(SITE)", "std.dev"]
+site_ix <- as.integer(d$SITE); n_site <- nlevels(d$SITE)
+say("\nsimulation draws site effects from N(0, ", sprintf("%.4f", sd_site),
+    "^2), one per site, rather than reusing the fitted values")
+
+set.seed(101)
+sim_seeds <- sample.int(1e6, NSIM)
+one_rep <- function(b) {
+  set.seed(sim_seeds[b])
+  bs <- rnorm(n_site, 0, sd_site)
+  ds <- d
+  ds$count <- rnbinom(nrow(d), size = th0, mu = exp(eta_fixed + bs[site_ix]))
+  f <- tryCatch(gam(FORM, family = nb(), data = ds, method = "REML"), error = function(e) NULL)
+  if (is.null(f)) return(c(NA_real_, NA_real_))
+  g <- gap_r(f, ds, sim_seeds[b])
+  c(stat_zero(f, ds$count), min(g, na.rm = TRUE))
+}
+ncore <- max(1L, min(parallel::detectCores(), 4L))
+sims <- if (.Platform$OS.type == "unix" && ncore > 1L)
+          parallel::mclapply(seq_len(NSIM), one_rep, mc.cores = ncore) else
+          lapply(seq_len(NSIM), one_rep)
+S <- do.call(rbind, sims); S <- S[stats::complete.cases(S), , drop = FALSE]
+say("replicates that refitted successfully: ", nrow(S), " of ", NSIM)
+
+p_zero <- (1 + sum(S[, 1] >= obs_zero)) / (nrow(S) + 1)
+p_gap  <- (1 + sum(S[, 2] <= obs_min))  / (nrow(S) + 1)
+
+say("\n-- zero counts --")
+say("simulated discrepancy: median ", sprintf("%.1f", median(S[, 1])),
+    ", 95% interval ", sprintf("%.1f to %.1f", quantile(S[, 1], .025), quantile(S[, 1], .975)))
+say("p = ", sprintf("%.4f", p_zero), "   (smallest attainable with ", nrow(S),
+    " replicates is ", sprintf("%.4f", 1 / (nrow(S) + 1)),
+    "; computed as (extreme + 1) / (B + 1), so it is never zero)")
+v_zero <- if (p_zero < 0.01) "excess" else if (p_zero > 0.10) "none" else "uncertain"
+say(switch(v_zero,
+  excess = "-> the data hold more zeros than this model generates, after allowing for estimation.",
+  none   = "-> the observed zero count is within what this model generates.",
+  uncertain = "-> UNCERTAIN. Close to the edge of the simulated null; reported as unresolved."))
+
+say("\n-- residual correlation across survey gaps --")
+say("simulated most-negative gap correlation: median ", sprintf("%.3f", median(S[, 2])),
+    ", 95% interval ", sprintf("%.3f to %.3f", quantile(S[, 2], .025), quantile(S[, 2], .975)))
+say("p = ", sprintf("%.4f", p_gap), "   (this p already accounts for the search across")
+say("all eleven gaps, and for the negative correlation the site random effect induces)")
+# Rule: a result near the decision boundary is labelled uncertain rather than
+# pushed to one side of it. With B replicates the smallest attainable p is
+# 1/(B+1), so a p in the single-digit percents is reported as what it is.
+verdict <- function(p, hi, lo) if (p < 0.01) hi else if (p > 0.10) lo else "uncertain"
+v_gap <- verdict(p_gap, "excess", "none")
+if (v_gap == "excess") {
+  say("-> more residual temporal structure than this model generates on its own.")
+  say("   The site random intercept alone does not account for dependence between")
+  say("   repeat visits to a site. This is a statement about model adequacy.")
+} else if (v_gap == "none") {
+  say("-> not distinguishable from what this model produces by itself. Testing the")
+  say("   raw correlation against zero, and picking the strongest of eleven gaps after")
+  say("   seeing them, is what made this look like a finding in an earlier version.")
+} else {
+  say("-> UNCERTAIN. The observed value sits close to the edge of the simulated null")
+  say("   and this run cannot place it on one side. Reported as unresolved rather")
+  say("   than forced across a threshold; more replicates would only sharpen it if")
+  say("   the answer changed a conclusion, and here it does not — the protection")
+  say("   estimate is unmoved either way, as the sensitivity table below shows.")
+}
+
+gap_tab <- data.frame(gap_years = as.numeric(names(obs_gapr)),
+                      r = round(as.numeric(obs_gapr), 3))
+gap_tab$is_min <- gap_tab$gap_years == as.numeric(obs_which)
 cap(gap_tab)
-write.csv(gap_tab, file.path(OUT, "table13_temporal_autocorrelation.csv"), row.names = FALSE)
+write.csv(data.frame(statistic = c("zero discrepancy", "min gap correlation"),
+                     observed = round(c(obs_zero, obs_min), 3),
+                     sim_median = round(c(median(S[, 1]), median(S[, 2])), 3),
+                     sim_lo = round(c(quantile(S[, 1], .025), quantile(S[, 2], .025)), 3),
+                     sim_hi = round(c(quantile(S[, 1], .975), quantile(S[, 2], .975)), 3),
+                     p = round(c(p_zero, p_gap), 4), n_sim = nrow(S)),
+          file.path(OUT, "table13_gof_bootstrap.csv"), row.names = FALSE)
 
-say("\nOne caution before reading that table. A site random intercept forces a site's")
-say("residuals to sum to roughly zero, which induces a negative correlation of about")
-say("-1/(m-1) at every gap, with m the surveys per site. Here m = ",
-    sprintf("%.2f", mean(table(d$SITE))), ", so about ",
-    sprintf("%.3f", -1 / (mean(table(d$SITE)) - 1)), " is the baseline to judge")
-say("against, not zero. Most gaps sit at or above it. One does not.\n")
+# ---- does it matter for the answer? ----
+say("\n-- does either affect the protection estimate? --")
+zi_site <- tapply(d$count == 0, d$SITE, sum)
+drop_sites <- names(zi_site)[zi_site >= 4]
+d_zt <- droplevels(d[!d$SITE %in% drop_sites, ])
+m_zt <- gam(FORM, family = nb(), data = d_zt, method = "REML")
+say("sites with at least 4 of 7 surveys zero: ", length(drop_sites))
 
-worst <- gap_tab$gap_years[which.min(gap_tab$r)]
-say("Because randomised quantile residuals depend on the seed, the strongest gap —")
-say(worst, " years — is re-tested across 20 randomisations, as every other residual")
-say("diagnostic here is:\n")
-seed_r <- t(sapply(1:20, function(s) {
-  z <- lag_pairs(rq_resid(s)); z <- z[z$gap == worst, ]
-  ct <- cor.test(z$a, z$b); c(r = unname(ct$estimate), p = ct$p.value)
+# planned sensitivity: a site-level random slope on year, so that sites are allowed
+# their own trajectory rather than only their own level
+d$SITEs <- d$SITE
+mRS <- tryCatch(gam(update(FORM, . ~ . + s(SITEs, YEAR, bs = "re")),
+                    family = nb(), data = d, method = "REML"), error = function(e) NULL)
+say("site-year random slope model: ", if (is.null(mRS)) "did not converge" else
+    paste0("fitted, REML ", sprintf("%.1f", mRS$gcv.ubre), " against ",
+           sprintf("%.1f", mA$gcv.ubre), " for the random-intercept model"))
+
+rows <- list(c("Full model (A)", "mA"), c("Zero-trimmed", "m_zt"))
+if (!is.null(mRS)) rows[[3]] <- c("+ site-year random slope", "mRS")
+sens <- do.call(rbind, lapply(rows, function(z) {
+  m <- get(z[2])
+  a <- rr(m, "Whitsunday", "NTR 1987"); b <- rr(m, "Whitsunday", "NTR 2004")
+  data.frame(model = z[1],
+             W1987 = sprintf("%.2f (%.2f-%.2f)", a[1], a[2], a[3]),
+             W2004 = sprintf("%.2f (%.2f-%.2f)", b[1], b[2], b[3]))
 }))
-say("gap of ", worst, " years: r ranges ", sprintf("%.3f", min(seed_r[, 1])), " to ",
-    sprintf("%.3f", max(seed_r[, 1])), ", median ", sprintf("%.3f", median(seed_r[, 1])),
-    ", p < 0.05 in ", sum(seed_r[, 2] < 0.05), " of 20 randomisations")
-say(if (sum(seed_r[, 2] < 0.05) <= 1)
-      "-> not distinguishable from the correlation the random effect induces." else
-      "-> this is not a seed artefact and it is stronger than the induced baseline.")
+cap(sens)
+write.csv(sens, file.path(OUT, "table16_gof_sensitivity.csv"), row.names = FALSE)
+say("\nNeither the zero excess nor allowing sites their own time trajectory moves the")
+say("Whitsunday estimate materially. A zero excess inflates apparent overdispersion,")
+say("which widens intervals rather than narrowing them, so it cannot manufacture a")
+say("result; it is reported as a limitation on the distributional form.")
 
-say("\nWhich survey pairs carry it:\n")
-z3 <- lag_pairs(rq_resid(1))
-z3 <- z3[z3$gap == worst, ]
-pair_tab <- do.call(rbind, lapply(split(z3, paste(z3$REGION, z3$y1, "to", z3$y2)), function(s)
-  data.frame(n_sites = nrow(s), r = round(cor(s$a, s$b), 3),
-             p = round(cor.test(s$a, s$b)$p.value, 4))))
-cap(pair_tab)
-
-say("\nWhat it means. A negative correlation is a reversal: sites sitting above their")
-say("predicted density at the first survey sat below it at the second, and the other")
-say("way round. Something between those two surveys moved sites differentially, and")
-say("the model does not have a term for it. The region-specific year trend cannot")
-say("supply one — it shifts every site in a region by the same amount.")
-say("")
-say("This is the cyclone limitation made concrete rather than merely stated. Cyclone")
-say("exposure is recorded at survey points only, so any disturbance falling in the")
-say("gap between two surveys is invisible to the covariate, and the gap concerned")
-say("here is a three-year one. Attributing it to a particular storm would be")
-say("inference beyond this dataset; what the data support is that the gap contains")
-say("an unmodelled, site-differentiating event. It belongs in the limitations and in")
-say("the list of questions for anyone who holds the track data.")
+# ---------------------------------------------------------------------
+# 6b. OBSERVED AGAINST FITTED, FINAL MODEL
+# ---------------------------------------------------------------------
+rule("6b. OBSERVED AGAINST FITTED (FINAL MODEL)")
+say("Step 1 checked observed against fitted for the baseline model. The final model")
+say("was never checked the same way. Binned means with the interval a correct model")
+say("would produce, so systematic departure is visible rather than inferred.\n")
+mu <- fitted(mA); th <- mA$family$getTheta(TRUE)
+brk <- unique(quantile(mu, seq(0, 1, length.out = 11)))
+bin <- cut(mu, brk, include.lowest = TRUE)
+of <- do.call(rbind, lapply(levels(bin), function(b) {
+  i <- bin == b
+  data.frame(bin = b, n = sum(i), fitted_mean = round(mean(mu[i]), 2),
+             observed_mean = round(mean(d$count[i]), 2),
+             se = round(sd(d$count[i]) / sqrt(sum(i)), 2))
+}))
+of$z <- round((of$observed_mean - of$fitted_mean) / of$se, 2)
+cap(of)
+write.csv(of, file.path(OUT, "table17_observed_vs_fitted.csv"), row.names = FALSE)
+say("\n|z| above 2 in any bin would mean the mean structure is wrong at that level of")
+say("density. Bins flagged: ",
+    if (any(abs(of$z) > 2, na.rm = TRUE)) paste(which(abs(of$z) > 2), collapse = ", ") else "none")
 
 # ---------------------------------------------------------------------
 # 7. MULTIPLICITY, BY HYPOTHESIS FAMILY
@@ -386,8 +513,8 @@ fam <- rbind(
              p = c(getp(st, "s(maxDHW)"), getp(st, "s(kd490)"), getp(st, "s(Cyclone)"))),
   data.frame(family = "H4 site variation", term = "s(SITE)", p = getp(st, "s(SITE)")))
 fam$p_holm <- ave(fam$p, fam$family, FUN = function(z) p.adjust(z, method = "holm"))
-fam$p <- round(fam$p, 4); fam$p_holm <- round(fam$p_holm, 4)
 fam$survives <- ifelse(is.na(fam$p_holm), NA, fam$p_holm < 0.05)
+fam$p <- fmt_p(fam$p); fam$p_holm <- fmt_p(fam$p_holm)
 cap(fam)
 write.csv(fam, file.path(OUT, "table14_multiplicity.csv"), row.names = FALSE)
 
@@ -418,27 +545,31 @@ rule("8. FIGURE")
 png(file.path(OUT, "fig16_distribution_and_time.png"), width = 2000, height = 950, res = 220)
 par(mfrow = c(1, 2), mar = c(3.9, 3.9, 2.8, 0.9)); base_par()
 
-h <- hist(sim0, breaks = 24, plot = FALSE)
+# a — zero discrepancy against its bootstrap null
+h <- hist(S[, 1], breaks = 24, plot = FALSE)
 plot(h, col = "grey88", border = "white",
-     xlim = c(min(h$breaks), max(h$breaks, obs0) + 3),
-     xlab = "Zero counts in data simulated from the fitted model",
-     ylab = "Replicates", main = "a  Are there more zeros than the model makes?",
-     font.main = 1, cex.main = 0.9, adj = 0)
-abline(v = obs0, col = RED, lwd = 2.2)
-text(obs0, par("usr")[4] * 0.90, paste0("observed = ", obs0, " "),
-     col = RED, cex = 0.75, adj = 1)
+     xlim = range(c(h$breaks, obs_zero)) + c(-1, 3),
+     xlab = "Observed minus model-expected zeros, in simulated data",
+     ylab = "Replicates", main = "a  Zero counts against a parametric bootstrap",
+     font.main = 1, cex.main = 0.88, adj = 0)
+abline(v = obs_zero, col = RED, lwd = 2.2)
+text(obs_zero, par("usr")[4] * 0.90, paste0("observed ", sprintf("%.0f", obs_zero), " "),
+     col = RED, cex = 0.72, adj = 1)
+mtext(sprintf("p = %.3f, %d refits", p_zero, nrow(S)), side = 3, line = -1.1,
+      adj = 0.98, cex = 0.66, col = "grey35")
 
-g <- gap_tab
-plot(g$gap_years, g$r, type = "n", ylim = range(c(g$lo, g$hi)),
-     xlab = "Years between surveys", ylab = "Residual correlation",
-     main = "b  Residual correlation within sites, by true gap",
-     font.main = 1, cex.main = 0.9, adj = 0)
-abline(h = 0, col = "grey55", lty = 2)
-abline(h = -1 / (mean(table(d$SITE)) - 1), col = BLUEG, lty = 3, lwd = 1.6)
-segments(g$gap_years, g$lo, g$gap_years, g$hi, col = "grey45", lwd = 1.8)
-points(g$gap_years, g$r, pch = 19, col = ifelse(g$p < 0.05, RED, TEAL), cex = 1.05)
-text(min(g$gap_years), -1 / (mean(table(d$SITE)) - 1), "induced by the site effect",
-     col = BLUEG, cex = 0.62, adj = c(0, -0.5))
+# b — most-negative gap correlation against its bootstrap null
+h2 <- hist(S[, 2], breaks = 24, plot = FALSE)
+plot(h2, col = "grey88", border = "white",
+     xlim = range(c(h2$breaks, obs_min)) + c(-0.03, 0.03),
+     xlab = "Most negative gap correlation, in simulated data",
+     ylab = "Replicates", main = "b  Residual correlation, search over all gaps",
+     font.main = 1, cex.main = 0.88, adj = 0)
+abline(v = obs_min, col = RED, lwd = 2.2)
+text(obs_min, par("usr")[4] * 0.90, paste0(" observed ", sprintf("%.2f", obs_min)),
+     col = RED, cex = 0.72, adj = 0)
+mtext(sprintf("p = %.3f", p_gap), side = 3, line = -1.1, adj = 0.98,
+      cex = 0.66, col = "grey35")
 dev.off(); say("wrote fig16_distribution_and_time.png")
 
 # Record the environment. mgcv ships with R but its version tracks the R

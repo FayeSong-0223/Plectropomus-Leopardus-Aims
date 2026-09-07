@@ -183,19 +183,11 @@ The report had carried a caveat on this number, but it gave a different and less
 serious reason than any of the above. `table5_variance_decomposition.csv` and the old
 figure 7 are gone.
 
-**Replaced by a drop-one-block comparison.** Each block is removed in turn and the
-fall in deviance explained recorded in percentage points, with a 95% interval from a
-cluster bootstrap over sites (200 resamples, indices drawn under a fixed seed so the
-result does not depend on core count). This is invariant to contrast coding, it is a
-statement about the fitted model rather than about total ecological variation, and it
-carries uncertainty. It is not additive and is never presented as shares.
-
-The result is more informative than the number it replaces. Management, dropped from
-the full model, produces no fall at all — protection is fixed for a site's whole
-history, so the site random effect simply takes over its work. Dropped from a model
-with no random effect, where it is identifiable, management gives the largest drop of
-any block. Both are reported. The site random effect is the largest contributor among
-the terms that can be separated, which is H4 supported.
+**Replaced by a drop-one-block comparison** — and that replacement was itself
+superseded within a day. See the third audit below. The version described here
+compared deviance explained across models that each re-estimated theta, and measured
+management by removing it from a model with no random effect. Both are wrong, for
+reasons set out in the next section. Nothing from this paragraph should be quoted.
 
 **Environmental intervals were too narrow.** Every interval in the project used
 `vcov(m)`, which treats the smoothing parameters as known. With
@@ -292,3 +284,138 @@ byte, so the scripts and their outputs are consistent. What was true is narrower
 was found separately: the copies committed to the repository for steps 2 and 3 predate
 the depth respecification, so the repository — not the pipeline — was carrying stale
 logs. Fixed by committing a complete regenerated set.
+
+---
+
+## Third audit, 2026-09-07
+
+The second audit's replacement for Q2 was itself wrong, and two of its new diagnostics
+were built on a simulation that did not respect the model's own structure. This round
+fixes those. It also removes dead code that would have silently rebuilt a withdrawn
+result. Where a claim from the previous round is overturned, it is marked superseded
+above rather than deleted.
+
+**Dead code that made the previous reproducibility claim false.** Step 4 still
+contained the withdrawn variance decomposition and still wrote
+`fig7_variance_decomposition.png`. The figure had been deleted by hand from the output
+directory, so the directory looked correct while the pipeline that produced it did not:
+any clean run would have recreated the file. The previous statement that two runs were
+byte-for-byte identical was therefore not a statement about the analysis as it now
+stands. The section is removed, and the reproducibility claim is only made after two
+clean runs of the current code.
+
+### Q2, rebuilt for the second time
+
+**Fault 1: deviance explained was not comparable across the models being compared.**
+`nb()` estimates theta by REML for each model separately. A reduced model can absorb
+the structure it lost into a smaller theta, so its deviance is measured against a
+different variance function and the difference between two deviances is not a
+difference in fit. Every model in the drop-one-block comparison is now fitted with
+`negbin(theta)` at the full model's estimate, so all deviances share one scale.
+
+**Fault 2: the 14.09 percentage-point "management" figure was confounded.** It came
+from removing management from a model with no site random effect. With no random effect
+present, the management terms absorb every between-site difference that happens to
+align with zoning — habitat, history, location, anything fixed about a site. It
+measures confounding as much as management. Reporting it as management's contribution
+would have repeated, in a new form, the error the second audit was meant to fix. It is
+withdrawn.
+
+**What is reported now.** Three things, in order of how much weight they carry.
+
+*First, a statement of what is not identifiable.* Protection changes within 0 of 71
+sites. Its entire contribution is between-site, and a site random intercept is also
+entirely between-site; the two are estimated from the same degrees of freedom. No
+partition of variance or of deviance can say how much of a between-site difference
+belongs to zoning rather than to whatever else distinguishes those sites. This is a
+limit of the design and cannot be fixed by a better statistic. The project does not
+report a management percentage, and the honest answer to "how much does management
+explain" is that this design cannot say.
+
+*Second, drop-one-block at fixed theta*, with a site-level cluster bootstrap for
+intervals. Descriptive and non-additive: the drops do not sum to anything and are not
+unique variance shares. The management row is expected to sit near zero for the reason
+just given, and is not evidence of no effect.
+
+*Third, out-of-sample prediction to unseen sites*, which is the one comparison the
+overlap does not spoil. Ten folds split by site, so a site is never in both training and
+test; each model scored by negative binomial log predictive density on held-out sites
+with the random effect set to zero, because an unseen site has no intercept to estimate.
+This is a predictive statement only. It does not partition variance, it does not license
+a causal reading, and it cannot be used to argue that management contributes more
+variance than site identity. The site random effect is deliberately excluded from the
+blocks compared, because it is already absent from every prediction and its row would
+invite exactly that unsupported comparison.
+
+### Diagnostics, rebuilt
+
+**The parametric bootstrap did not preserve site clustering.** The previous version
+simulated from `fitted(mA)`, which bakes the shrunken site estimates into every
+replicate as if they were known constants. The empirical standard deviation of those
+fitted effects is 0.219 against an estimated component of 0.307, so the simulated data
+carried about 30% less between-site variation than the model implies, and the null
+distributions were too narrow. Every replicate now draws a fresh set of site effects
+from N(0, sigma_site^2), one per site, so clustering is generated rather than
+inherited. The correction is not cosmetic: it widened the null for the residual
+correlation statistic from roughly (−0.21, −0.15) to (−0.32, −0.20).
+
+**The zero check was a conditional simulation, not a parametric bootstrap.** It compared
+the observed zero count against draws at fixed mu, which ignores that mu and theta were
+estimated from the same data. Each replicate now simulates, refits, and recomputes the
+statistic from the refit exactly as it is computed from the real fit.
+
+**The temporal check searched eleven gaps without adjustment and treated jitter seeds as
+evidence.** Correlations were tested against zero, when a site random intercept induces
+a negative correlation at every gap by construction; the strongest of eleven gaps was
+selected after seeing all of them; and twenty randomised-quantile seeds were reported as
+though they were twenty independent tests, when they are twenty draws from one dataset.
+The statistic is now the most negative correlation across all gaps — so the search is
+part of the statistic — compared against its own simulated null, which carries both the
+induced correlation and the search. One jitter draw per replicate, on both sides.
+
+**No mechanism is proposed for what the temporal statistic shows.** The previous version
+described a disturbance falling inside a survey gap and connected it to the cyclone
+covariate's limitations. That is an ecological explanation this analysis does not test:
+there is no covariate here that would distinguish it from any other source of the same
+pattern. The finding is reported as what it is, a statement about whether the site
+random intercept is sufficient, and the survey pairs are listed descriptively.
+
+**Simulated p-values.** Computed as (extreme + 1) / (B + 1) and never reported as zero;
+the smallest attainable value is stated alongside. Where a p-value falls between 0.01
+and 0.10 the result is labelled uncertain rather than pushed across a threshold. More
+replicates are not added to resolve such a case unless the answer would change a
+conclusion.
+
+**Planned sensitivity now run.** A site-level random slope on year, so that sites are
+allowed their own trajectory rather than only their own level, alongside the
+zero-trimmed refit.
+
+### Other corrections
+
+**Basis dimension is tested rather than asserted.** The previous version stated that the
+year-smooth flag could not be fixed by raising k and that the kd490 flag was a real
+limitation. Neither was checked. Both are now checked by refitting at the largest basis
+the data allow — k up to 20 for kd490, k up to the number of distinct survey years for
+the year smooths — and reporting whether the flag clears and whether the protection
+estimate moves.
+
+**Observed against fitted for the final model.** Step 1 checked this for the baseline;
+the final model had never been checked the same way. Binned means with intervals.
+
+**Partial-effect bands were conditional while the text claimed unconditional
+everywhere.** Figures 6 and 9 drew `plot.gam` bands from the conditional covariance
+matrix. Both now pass `unconditional = TRUE`, matching the intervals in the tables.
+
+**The Keppel anomaly count is now reported in full.** There are 18 rows in the extract
+where legal density exceeds total density: 17 in Keppel 2021 at factors of 2.1 to 6.8,
+and one in Whitsunday 2018 where the excess is 0.0018 — a rounding artefact, three
+orders of magnitude smaller and a different thing entirely. The question sent to AIMS
+names 17, and the code now reports both figures so that anyone repeating the check
+finds 18 and is not left wondering which is right.
+
+**Language.** Whitsunday is a robust adjusted association, not a measured effect of
+protection: adjusting for wave exposure and restricting to the sheltered stratum rule
+out exposure as the explanation, but reserve placement was not random and no
+observational check here establishes that whatever else distinguishes the zoned sites is
+innocuous. Palm is unresolved, not null. Q2 yields no identifiable management
+percentage.

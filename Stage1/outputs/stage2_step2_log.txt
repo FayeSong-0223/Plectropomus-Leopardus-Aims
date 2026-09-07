@@ -92,79 +92,122 @@ into a baseline.
 20      5 region-year saturated (B) Whitsunday   NTR 2004  2.90 1.99 4.23
 
 ======================================================================
-4. HOW MUCH DOES EACH BLOCK CONTRIBUTE?
+4. HOW MUCH DOES EACH BLOCK CONTRIBUTE?  (Q2)
 ======================================================================
-Q2 asks how much of the variation the covariates explain. An earlier version of
-this analysis answered it by decomposing the variance of the linear predictor
-into per-block shares. That answer has been withdrawn, for three reasons found
-on audit and recorded in DECISIONS.md:
+Q2 asks how much of the variation the covariates explain. Two earlier answers
+have been withdrawn, and the reasons matter more than the numbers did.
 
-  1. It was not invariant to the coding of the factor contrasts. Refitting the
-     identical model under sum-to-zero rather than treatment contrasts moved the
-     management share from 0.481 to 0.391 and space/time from 0.121 to 0.345,
-     with identical fitted values and identical log-likelihood. A quantity that
-     moves when nothing about the fit moves is a property of the parameterisation,
-     not of the data.
-  2. It partitioned only the systematic part. The linear predictor has variance
-     0.533; the negative binomial observation process contributes roughly 0.455
-     more on the same scale. Around half of the variation sat outside the
-     partition and the shares were silently conditional on that.
-  3. The site block used the empirical variance of the shrunken random-effect
-     predictions, 0.048, against an estimated variance component of 0.094. Site
-     was understated by about half, and every other block inflated against it.
+Withdrawn 1: a link-scale variance decomposition reporting management at 0.481.
+  It was not invariant to the coding of the factor contrasts. Refitting the
+  identical model under sum-to-zero moved management to 0.391 and space/time
+  from 0.121 to 0.345, with identical fitted values and log-likelihood. It also
+  partitioned only the systematic half of the variation, and used the shrunken
+  random-effect predictions for the site block, understating it by about half.
 
-What replaces it is a drop-one-block comparison: refit the model without each
-block in turn and record how far deviance explained falls, in percentage points.
-This is invariant to contrast coding, it is a statement about the fitted model
-rather than about total ecological variation, and it can carry an interval.
-It is not additive: blocks share variation, so the drops do not sum to the
-model's deviance explained and should never be presented as shares of it.
+Withdrawn 2: a drop-one-block comparison in which management was measured by
+  removing it from a model with no site random effect. That number, 14.09
+  percentage points, is not a management contribution. With no random effect
+  present, the management terms absorb every between-site difference that
+  happens to align with zoning — habitat, history, location, anything fixed
+  about a site. It measures confounding as much as management, and reporting
+  it as management's share would have repeated the error it was meant to fix.
 
-deviance explained, full model: 60.2%
-deviance explained, same model without the site random effect: 48.9%
+What is reported instead is set out below. It begins with the thing that has to
+be said plainly rather than measured.
 
-bootstrapping 200 site-level resamples (9 model fits each) — this is by far the slow part of the pipeline,
-of the order of half an hour on two cores and a few minutes on eight
+----------------------------------------------------------------------
+4a. WHAT IS NOT IDENTIFIABLE, AND WHY
+----------------------------------------------------------------------
+Protection changes within 0 of 71 sites.
+
+That single fact settles it. Protection is a fixed property of a site across the
+whole series, so its entire contribution is between-site. A site random intercept
+is also, by construction, entirely between-site. The two are estimated from the
+same 71 degrees of freedom, and no partition of variance or of deviance can say
+how much of a between-site difference belongs to zoning rather than to whatever
+else distinguishes those sites. Drop management and the random effect absorbs it;
+drop the random effect and management absorbs everything else.
+
+This is a limit of the design, not of the method, and it cannot be fixed by
+choosing a better statistic. What CAN be estimated is the size of the protection
+contrast, with an interval, which is Step 1 and Step 3's business — and how much
+the model's ability to predict a site it has never seen depends on knowing that
+site's zoning. That second question is answerable, and it is asked in 4c.
+
+----------------------------------------------------------------------
+4b. DROP-ONE-BLOCK AT FIXED DISPERSION
+----------------------------------------------------------------------
+Each block is removed in turn and the fall in deviance explained recorded.
+
+One correction to how this was done before: nb() re-estimates theta for every
+model, so a reduced model can absorb its lost structure into a smaller theta and
+the two deviances are then measured on different scales, which makes the
+difference uninterpretable. Every model below is fitted with theta held at the
+full model's estimate, using negbin(), so all deviances share one scale.
+
+Management is included for completeness and is expected to be near zero for the
+reason given in 4a. It is not evidence of no effect.
+
+theta from the full model, held fixed throughout: 5.9601
+deviance explained at fixed theta, full model: 59.5%
+
+bootstrapping 200 site-level resamples at 7 fits each; resample indices are drawn up front under a fixed seed, so the
+result does not depend on how the work is divided between cores
 replicates that converged for every model: 200 of 200
 
 -- fall in deviance explained when each block is removed (percentage points) --
-                                                              block
-Management, no site random effect Management, no site random effect
-Site random effect (H4)                     Site random effect (H4)
-Environment (H3)                                   Environment (H3)
-Regional year trends                           Regional year trends
-Habitat (H2)                                           Habitat (H2)
-Wave exposure (confounder)               Wave exposure (confounder)
-Management (H1/Q3)                               Management (H1/Q3)
-                                  dev_expl_drop_pp    lo    hi excludes_zero
-Management, no site random effect            14.09  6.53 18.75          TRUE
-Site random effect (H4)                      11.27  0.24 15.08          TRUE
-Environment (H3)                              4.78  2.11  9.44          TRUE
-Regional year trends                          4.30  1.43  8.35          TRUE
-Habitat (H2)                                  0.42 -0.87  3.08         FALSE
-Wave exposure (confounder)                    0.28 -0.65  1.31         FALSE
-Management (H1/Q3)                           -1.02 -4.46 -0.12          TRUE
+                       block dev_expl_drop_pp    lo    hi excludes_zero
+1    Site random effect (H4)             9.76  1.30 12.43          TRUE
+2           Environment (H3)             2.90  1.03  6.51          TRUE
+3       Regional year trends             2.59  1.13  5.79          TRUE
+4 Wave exposure (confounder)             0.23 -1.05  0.94         FALSE
+5               Habitat (H2)            -0.26 -0.82  2.76         FALSE
+6         Management (H1/Q3)            -1.69 -3.81 -0.44          TRUE
 
-These are conditional, non-additive measures of each block's contribution to
-this model. They are not shares of total ecological variation and do not sum
-to anything meaningful. A block whose interval includes zero is not
-distinguishable from a block that contributes nothing.
+Conditional and non-additive. Blocks share variation, the drops do not sum to
+anything, and they are not shares of total variation.
 
-The management row is the one that repays reading carefully, and it is the
-honest answer to Q2. Protection is fixed for the whole history of a site, so
-in a model that already gives every site its own intercept, management and the
-random effect are competing to explain the same between-site differences.
-Remove management and the random effect simply takes the work over, which is
-why its drop sits at or below zero. That is not evidence of no effect — Step 3
-shows the Whitsunday estimate is stable across every specification — it means
-deviance explained cannot separate the two, and any method that appears to
-separate them is reporting an artefact of how the model was parameterised.
-The last row measures management where it is identifiable: in a model with no
-site random effect at all.
+----------------------------------------------------------------------
+4c. OUT-OF-SAMPLE: WHAT DOES KNOWING A NEW SITE'S ZONING BUY?
+----------------------------------------------------------------------
+The in-sample comparisons above cannot separate management from site identity
+because both are fitted to the same sites. Prediction to a site the model has
+never seen removes that overlap: for an unseen site there is no random intercept
+to estimate, so the fixed effects have to carry the prediction alone, and
+management either helps or it does not.
 
-H4 said unexplained site-level variation would be large relative to the
-measured covariates. On these numbers it is: the site random effect is the
-largest single contributor, and no covariate block approaches it.
+Ten folds, split by SITE so that a site is never in both training and test.
+Each model is fitted on the training sites and scored on the held-out sites by
+negative binomial log predictive density, with the random effect set to zero for
+unseen sites and each model using its own theta — a predictive comparison is
+between complete distributions, so re-estimating theta is correct here.
+
+This measures predictive contribution, not a share of variance, and it does not
+license a causal reading: a zoning label may predict a new site well because of
+what protection does, or because of what protection is correlated with.
+
+Total log predictive density of the full model across all held-out sites: -1232.3
+
+-- loss in log predictive density when each block is removed --
+   (positive = the full model predicts unseen sites better without that block
+    removed; |z| above about 2 is the conventional threshold)
+
+                       block delta_lpd   se per_obs     z
+1         Management (H1/Q3)      87.3 17.6  0.1869  4.96
+2               Habitat (H2)       4.2  6.4  0.0089  0.66
+3           Environment (H3)      -0.6  9.0 -0.0013 -0.07
+4       Regional year trends      -3.4  8.6 -0.0072 -0.40
+5 Wave exposure (confounder)      -9.7  2.7 -0.0209 -3.59
+
+How to read this, and how not to.
+  It is a predictive statement: knowing a new site's zoning improves the
+  prediction of its counts by this much on the log scale. It does not partition
+  variance, the entries do not sum to anything, and a large value is not evidence
+  that management contributes more variance than site identity — that comparison
+  is unavailable in this design by any route, as 4a sets out.
+  It is not causal. Zoning may predict an unseen site well because of what
+  protection does, or because of whatever the zoning process selected for. This
+  analysis cannot tell those apart, and nothing here should be read as trying to.
 
 ======================================================================
 5. FIGURES
@@ -176,9 +219,9 @@ wrote fig8_protection_stability.png
 ======================================================================
 6. DIAGNOSTICS
 ======================================================================
-Model A quantile residuals: mean -0.015 sd 0.970 | Shapiro-Wilk p = 0.617
-region-year mean residuals now range -0.240 to +0.215  (Step 1 range was -0.652 to +0.503)
-sd of region-year mean residuals: 0.112
+Model A quantile residuals: mean -0.004 sd 0.952 | Shapiro-Wilk p = 0.973
+region-year mean residuals now range -0.234 to +0.130  (Step 1 range was -0.652 to +0.503)
+sd of region-year mean residuals: 0.098
 
 ======================================================================
 7. THE THERMAL SMOOTH, INTERROGATED
