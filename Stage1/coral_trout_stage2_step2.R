@@ -303,46 +303,91 @@ set.seed(7)
 fold_of_site <- setNames(sample(rep_len(1:K, length(sites))), sites)
 d$.fold <- fold_of_site[as.character(d$SITE)]
 
+# ---- Gauss-Hermite nodes and weights, base R only (Golub-Welsch) -----------
+# For an unseen site the random intercept is unknown, so the predictive density is
+#   p(y) = INT NB(y; exp(eta + b), theta) * N(b; 0, sigma^2) db
+# rather than the density at b = 0. Under a log link those differ: the density at
+# the median of the random-effect distribution is not its mean. An earlier version
+# evaluated at b = 0 and is corrected here.
+#
+# Substituting b = sqrt(2) * sigma * x turns the integral into the Gauss-Hermite
+# form INT f(x) exp(-x^2) dx, approximated by sum_i w_i f(x_i), so
+#   log p(y) = -0.5*log(pi) + logsumexp_i [ log(w_i) + log NB(y; exp(eta + sqrt(2) sigma x_i), theta) ]
+# The logsumexp keeps this stable: the individual densities underflow to zero in
+# the tails, and summing them on the natural scale would silently lose them.
+gauss_hermite <- function(n) {
+  i <- seq_len(n - 1); J <- matrix(0, n, n)
+  J[cbind(i, i + 1)] <- sqrt(i / 2); J[cbind(i + 1, i)] <- sqrt(i / 2)
+  e <- eigen(J, symmetric = TRUE)
+  list(x = rev(e$values), w = rev(sqrt(pi) * e$vectors[1, ]^2))
+}
+GH <- gauss_hermite(20)
+stopifnot(abs(sum(GH$w) - sqrt(pi)) < 1e-10)          # weights integrate exp(-x^2)
+lse <- function(v) { m <- max(v); m + log(sum(exp(v - m))) }
+
 # The site random effect is deliberately NOT among the blocks compared here. It is
-# already excluded from every prediction, because an unseen site has no intercept to
-# estimate, so a "drop the random effect" row would not measure site identity's
-# predictive contribution and would invite exactly the comparison this section cannot
-# support — management against site identity. That comparison is not available from
-# this design by any route (4a).
+# already integrated out of every prediction, so a "drop the random effect" row would
+# not measure site identity's predictive contribution and would invite exactly the
+# comparison this section cannot support — management against site identity. That
+# comparison is not available from this design by any route (4a).
 cv_blocks <- blocks[names(blocks) != "Site random effect (H4)"]
 cv_models <- c(list("Full model" = ". ~ ."), cv_blocks)
 lpd <- matrix(NA_real_, nrow = nrow(d), ncol = length(cv_models),
               dimnames = list(NULL, names(cv_models)))
+sig_fold <- rep(NA_real_, K)
+
 for (k in 1:K) {
-  tr <- d[d$.fold != k, ]; te <- d[d$.fold == k, ]
-  tr <- droplevels(tr)
+  tr <- droplevels(d[d$.fold != k, ]); te <- d[d$.fold == k, ]
   for (mi in seq_along(cv_models)) {
     fm <- if (names(cv_models)[mi] == "Full model") fA else update(fA, as.formula(cv_models[[mi]]))
     fit <- tryCatch(gam(fm, family = nb(), data = tr, method = "REML"), error = function(e) NULL)
     if (is.null(fit)) next
-    # exclude the site random effect: unseen sites have no intercept to borrow
     trm <- predict(fit, newdata = transform(te, SITE = tr$SITE[1]), type = "terms")
     re_col <- grep("s\\(SITE\\)", colnames(trm))
-    eta <- attr(trm, "constant") + rowSums(trm[, setdiff(seq_len(ncol(trm)), re_col), drop = FALSE])
+    eta <- attr(trm, "constant") +
+           rowSums(trm[, setdiff(seq_len(ncol(trm)), re_col), drop = FALSE])
     th_k <- fit$family$getTheta(TRUE)
-    lpd[d$.fold == k, mi] <- dnbinom(te$count, size = th_k, mu = exp(eta), log = TRUE)
+    # sigma is re-estimated inside each training fold, from that fold's own fit,
+    # so nothing from the held-out sites leaks into the prediction.
+    vc <- gam.vcomp(fit, rescale = FALSE)
+    sg <- if ("s(SITE)" %in% rownames(vc)) vc["s(SITE)", "std.dev"] else 0
+    if (names(cv_models)[mi] == "Full model") sig_fold[k] <- sg
+    lpd[d$.fold == k, mi] <- vapply(seq_along(eta), function(r)
+      -0.5 * log(pi) + lse(log(GH$w) +
+        dnbinom(te$count[r], size = th_k,
+                mu = exp(eta[r] + sqrt(2) * sg * GH$x), log = TRUE)),
+      numeric(1))
   }
 }
+say("site-effect SD estimated separately in each training fold: ",
+    paste(sprintf("%.3f", sig_fold), collapse = ", "))
+
 base_lpd <- lpd[, "Full model"]
+site_of <- as.character(d$SITE)
 cvres <- do.call(rbind, lapply(names(cv_blocks), function(nm) {
   dif <- base_lpd - lpd[, nm]
-  dif <- dif[is.finite(dif)]
-  data.frame(block = nm, delta_lpd = round(sum(dif), 1),
-             se = round(sqrt(length(dif)) * sd(dif), 1),
-             per_obs = round(mean(dif), 4))
+  keep <- is.finite(dif)
+  # Clustered standard error. Observations are not independent within a site, so the
+  # difference is summed within each site first and the spread taken across the 71
+  # site totals. The naive version, which treats all 467 observations as independent,
+  # is reported alongside because an earlier version quoted it as though it were the
+  # standard error, and the gap between them is the point.
+  per_site <- tapply(dif[keep], site_of[keep], sum)
+  ns <- length(per_site)
+  data.frame(block = nm, delta_lpd = round(sum(dif[keep]), 1),
+             se_site = round(sqrt(ns) * sd(per_site), 1),
+             se_naive = round(sqrt(sum(keep)) * sd(dif[keep]), 1),
+             n_sites = ns, per_obs = round(mean(dif[keep]), 4))
 }))
-cvres$z <- round(cvres$delta_lpd / cvres$se, 2)
+cvres$z_site  <- round(cvres$delta_lpd / cvres$se_site, 2)
+cvres$z_naive <- round(cvres$delta_lpd / cvres$se_naive, 2)
 cvres <- cvres[order(-cvres$delta_lpd), ]; rownames(cvres) <- NULL
-say("Total log predictive density of the full model across all held-out sites: ",
+say("\nTotal log predictive density of the full model across all held-out sites: ",
     sprintf("%.1f", sum(base_lpd[is.finite(base_lpd)])))
 say("\n-- loss in log predictive density when each block is removed --")
-say("   (positive = the full model predicts unseen sites better without that block")
-say("    removed; |z| above about 2 is the conventional threshold)\n")
+say("   positive = removing that block makes prediction to an unseen site worse.")
+say("   se_site clusters on the ", cvres$n_sites[1], " sites; se_naive treats all")
+say("   observations as independent and is shown only for comparison.\n")
 cap(cvres)
 write.csv(cvres, file.path(OUT, "table15_cv_block_contributions.csv"), row.names = FALSE)
 

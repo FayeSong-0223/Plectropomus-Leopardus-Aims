@@ -484,3 +484,64 @@ Steps 3 and 5 were rerun twice each to regenerate what these changes touch, and 
 byte-identical output across the two runs. Steps 1, 2 and 4 were not rerun and their
 outputs are unchanged from the two full clean runs recorded above; a file-by-file
 comparison confirms that only the step 3 and step 5 outputs differ.
+
+---
+
+## Step 2 CV corrections applied, 2026-09-07
+
+Both defects flagged in the review above are now fixed. Step 2 was rerun twice and
+nothing else was rerun.
+
+**The unseen-site random effect is integrated, not evaluated at zero.** For a site the
+model has not seen, the intercept is unknown, so the predictive density is
+
+    p(y) = INT NB(y; exp(eta + b), theta) * N(b; 0, sigma^2) db
+
+and not the density at b = 0. Under a log link the value at the median of the
+random-effect distribution is not its mean, so the earlier version was scoring a
+different quantity from the one it described. The integral is taken by 20-node
+Gauss-Hermite quadrature, derived in base R by Golub-Welsch so no package is needed,
+with log-sum-exp averaging — the individual densities underflow in the tails and
+summing them on the natural scale would lose those contributions silently. The
+quadrature was validated before use: weights sum to sqrt(pi) to 1e-10, and the
+resulting log density matches `integrate()` to 1.3e-15 and a two-million-draw Monte
+Carlo to 3e-5.
+
+Sigma is re-estimated inside each training fold from that fold's own fit, so nothing
+from the held-out sites enters the prediction. Across the ten folds it ranged 0.271 to
+0.339, so this was not a formality.
+
+**The standard error is clustered on sites.** The per-observation difference is summed
+within each of the 71 sites first, and the spread taken across those 71 site totals.
+The naive version, which treats all 467 held-out observations as independent, is
+reported alongside rather than replaced, because an earlier version quoted it as though
+it were the standard error and the gap between the two is the point.
+
+**What changed.** Management's loss in log predictive density fell from 87.3 to 48.4,
+and the total held-out log predictive density rose from -1232.3 to -1214.7. Its z fell
+from 4.96 to 4.14 — most of that from the integration, which shifts every predicted
+mean, rather than from the clustering. Two blocks changed sign, environment and the
+regional year trends, but neither is distinguishable from zero either way.
+
+    Block                        Delta lpd   SE(site)  SE(naive)   z(site)  z(naive)
+    Management (H1/Q3)                48.4       11.7       10.1      4.14      4.79
+    Environment (H3)                   4.8        7.2        6.9      0.67      0.70
+    Habitat (H2)                       3.0        6.1        5.0      0.49      0.60
+    Regional year trends               2.4        6.3        6.6      0.38      0.36
+    Wave exposure (confounder)        -7.0        3.1        2.1     -2.26     -3.33
+
+**The interpretation is unchanged and stays unchanged.** Exploratory, observational and
+not causal, whatever the z. It is a predictive statement about sites the model has not
+seen: it does not partition variance, the entries do not sum to the model's
+performance, and it cannot be used to argue that management contributes more variance
+than site identity — that comparison is unavailable in this design by any route. A
+zoning label may predict an unseen site well because of what protection does, or because
+of whatever the zoning process selected for, and this analysis cannot tell those apart.
+
+**Verification.** Two independent runs of Step 2 in the same environment that produced
+every other verified result (R 4.3.3, mgcv 1.9-1, x86_64-pc-linux-gnu). Both exited 0
+with empty stderr — no warnings. All eight Step 2 outputs byte-identical between the two
+runs. Only `table15_cv_block_contributions.csv` and the Step 2 log changed relative to
+the previously verified run: `table4`, `table5` and figures 6, 7, 8 and 9 are
+byte-identical to it, confirming the edit touched only the cross-validation block.
+Steps 1, 3, 4 and 5 were not rerun.

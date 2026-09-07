@@ -186,18 +186,27 @@ This measures predictive contribution, not a share of variance, and it does not
 license a causal reading: a zoning label may predict a new site well because of
 what protection does, or because of what protection is correlated with.
 
-Total log predictive density of the full model across all held-out sites: -1232.3
+site-effect SD estimated separately in each training fold: 0.339, 0.283, 0.321, 0.304, 0.323, 0.305, 0.305, 0.271, 0.320, 0.275
+
+Total log predictive density of the full model across all held-out sites: -1214.7
 
 -- loss in log predictive density when each block is removed --
-   (positive = the full model predicts unseen sites better without that block
-    removed; |z| above about 2 is the conventional threshold)
+   positive = removing that block makes prediction to an unseen site worse.
+   se_site clusters on the 71 sites; se_naive treats all
+   observations as independent and is shown only for comparison.
 
-                       block delta_lpd   se per_obs     z
-1         Management (H1/Q3)      87.3 17.6  0.1869  4.96
-2               Habitat (H2)       4.2  6.4  0.0089  0.66
-3           Environment (H3)      -0.6  9.0 -0.0013 -0.07
-4       Regional year trends      -3.4  8.6 -0.0072 -0.40
-5 Wave exposure (confounder)      -9.7  2.7 -0.0209 -3.59
+                       block delta_lpd se_site se_naive n_sites per_obs z_site
+1         Management (H1/Q3)      48.4    11.7     10.1      71  0.1037   4.14
+2           Environment (H3)       4.8     7.2      6.9      71  0.0103   0.67
+3               Habitat (H2)       3.0     6.1      5.0      71  0.0065   0.49
+4       Regional year trends       2.4     6.3      6.6      71  0.0051   0.38
+5 Wave exposure (confounder)      -7.0     3.1      2.1      71 -0.0151  -2.26
+  z_naive
+1    4.79
+2    0.70
+3    0.60
+4    0.36
+5   -3.33
 
 How to read this, and how not to.
   It is a predictive statement: knowing a new site's zoning improves the

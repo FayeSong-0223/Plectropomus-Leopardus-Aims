@@ -61,16 +61,35 @@ measured in a model with no random effect, which conflated management with every
 fixed about a site. Both are documented in `DECISIONS.md`.
 
 What is reported instead is a drop-one-block comparison at fixed dispersion —
-descriptive, non-additive, not variance shares — and, as an **exploratory** result, an
-out-of-sample comparison predicting to sites the model has never seen.
+descriptive, non-additive, not variance shares — and an out-of-sample comparison
+predicting to sites the model has never seen. The second is **exploratory,
+observational and not causal**, and stays that way whatever its z-value.
 
-That second one is flagged exploratory for two specific reasons, both of which would
-have to be fixed before it could be quoted as inference. Its standard error is computed
-across the 467 held-out observations as though they were independent, when they cluster
-within 71 sites, so the reported z is optimistic. And predictions for an unseen site set
-its random effect to zero rather than integrating over the random-effect distribution;
-under a log link those are not the same thing, and the second is the correct predictive
-density. Both are fixable and neither has been fixed yet.
+Both defects an earlier version of that comparison carried have now been corrected. The
+unseen-site random effect is integrated over rather than set to zero — under a log link
+the prediction at the median of the random-effect distribution is not its mean, so the
+integral is the right quantity, taken by 20-node Gauss–Hermite quadrature with
+log-sum-exp averaging, with σ re-estimated inside each training fold (range 0.271–0.339
+across the ten). And the standard error is now clustered on the 71 sites rather than
+treating all 467 held-out observations as independent.
+
+| Block removed | Δ log pred. density | SE (site) | **z** |
+|---|---:|---:|---:|
+| Management | **48.4** | 11.7 | **4.14** |
+| Environment | 4.8 | 7.2 | 0.67 |
+| Habitat | 3.0 | 6.1 | 0.49 |
+| Regional year trends | 2.4 | 6.3 | 0.38 |
+| Wave exposure | −7.0 | 3.1 | −2.26 |
+
+The integration was much the larger correction — management's Δlpd fell from 87.3 to
+48.4; clustering moved its z from 4.79 to 4.14. Knowing an unseen site's zoning improves
+prediction of its counts and nothing else measurably does.
+
+That is a predictive statement and nothing more. It does not partition variance, it
+cannot be used to argue that management contributes more variance than site identity —
+that comparison is unavailable here by any route — and it is not causal: a zoning label
+may predict an unseen site well because of what protection does, or because of whatever
+the zoning process selected for, and this analysis cannot tell those apart.
 
 **Habitat does not predict density.** None of rugosity (p = 0.097), live hard coral
 (p = 0.375) or depth (p = 0.099) is significant, and none survives a multiplicity

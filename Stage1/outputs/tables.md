@@ -112,47 +112,57 @@ the site random effect.
 
 ## Table 15 — Out-of-sample prediction to unseen sites (Step 2)
 
-**Exploratory.** This is the one Q2 comparison the management/site overlap does not
-spoil, but two corrections are outstanding and it should not be quoted as inference
-until they are made. Ten folds split by site, so a site is never in both training and
-test. Each model is fitted on the training sites and scored on held-out sites by
-negative binomial log predictive density. Total log predictive density of the full model
-across all held-out sites: −1232.3.
+**Exploratory, observational, and not causal.** This is the one Q2 comparison the
+management/site overlap does not spoil, and it remains a predictive statement about
+sites the model has not seen. It is not a variance share and carries no causal reading.
 
-What needs fixing, precisely:
+Ten folds split by site, so a site is never in both training and test. Each model is
+fitted on the training sites and scored on the held-out sites by negative binomial log
+predictive density. Total log predictive density of the full model across all held-out
+sites: −1214.7.
 
-1. **The standard error is not clustered.** It is computed across the 467 held-out
-   observations as though they were independent, when they cluster within 71 sites. A
-   site-level standard error — aggregating the per-observation difference within each
-   site before taking the spread across sites — would be larger, and the z below
-   correspondingly smaller.
-2. **Unseen-site random effects are set to zero rather than integrated.** Under a log
-   link, the prediction at the median of the random-effect distribution is not its mean.
-   The correct predictive density integrates over N(0, σ²) rather than evaluating at
-   zero, which shifts every predicted mean upward and changes the density.
+Two corrections were applied to an earlier version of this table, and both mattered:
 
-| Block removed | Loss in log predictive density | SE | Per observation | z |
-|---|---:|---:|---:|---:|
-| Management (H1/Q3) | 87.3 | 17.6 | 0.187 | **4.96** |
-| Habitat (H2) | 4.2 | 6.4 | 0.009 | 0.66 |
-| Environment (H3) | −0.6 | 9.0 | −0.001 | −0.07 |
-| Regional year trends | −3.4 | 8.6 | −0.007 | −0.40 |
-| Wave exposure (confounder) | −9.7 | 2.7 | −0.021 | −3.59 |
+1. **The unseen-site random effect is integrated, not set to zero.** For a site the
+   model has never seen the intercept is unknown, so the predictive density is
+   ∫ NB(y; exp(η + b), θ) · N(b; 0, σ²) db, not the density at b = 0 — under a log link
+   the value at the median of that distribution is not its mean. The integral is taken
+   by 20-node Gauss–Hermite quadrature with log-sum-exp averaging, which keeps the
+   tail contributions from underflowing. σ is re-estimated inside each training fold
+   from that fold's own fit, so nothing leaks from the held-out sites; across the ten
+   folds it ranged 0.271 to 0.339.
+2. **The standard error is clustered on sites.** The difference is summed within each
+   of the 71 sites first and the spread taken across those 71 site totals. The naive
+   version, which treats all 467 held-out observations as independent, is shown
+   alongside because an earlier version quoted it as though it were the standard error.
 
-The direction is clear — knowing an unseen site's zoning improves the prediction of its
-counts, and nothing else measurably does; wave exposure makes it slightly worse, which
-is what an adjustment term carried for confounding control rather than for prediction
-can do. The **magnitude and the z should be treated as indicative only** until the two
-corrections above are applied.
+| Block removed | Δ log pred. density | SE (site-clustered) | SE (naive) | Per obs | **z (clustered)** | z (naive) |
+|---|---:|---:|---:|---:|---:|---:|
+| Management (H1/Q3) | 48.4 | 11.7 | 10.1 | 0.1037 | **4.14** | 4.79 |
+| Environment (H3) | 4.8 | 7.2 | 6.9 | 0.0103 | **0.67** | 0.7 |
+| Habitat (H2) | 3 | 6.1 | 5 | 0.0065 | **0.49** | 0.6 |
+| Regional year trends | 2.4 | 6.3 | 6.6 | 0.0051 | **0.38** | 0.36 |
+| Wave exposure (confounder) | -7 | 3.1 | 2.1 | -0.0151 | **-2.26** | -3.33 |
 
-**How not to read this.** It is a predictive statement. It does not partition variance,
-the entries do not sum to the model's performance, and it cannot be used to argue that
-management contributes more variance than site identity — that comparison is unavailable
-in this design by any route. It is not causal: zoning may predict an unseen site well
-because of what protection does, or because of whatever the zoning process selected for,
-and this analysis cannot tell those apart. The site random effect is deliberately absent
-from the table, because it is already excluded from every prediction and its row would
-invite exactly that unsupported comparison.
+The integration was much the larger of the two corrections: management's Δlpd fell from
+87.3 to 48.4 and the total held-out log predictive density rose from −1232.3 to −1214.7.
+Clustering the standard error contributed the smaller part, moving management's z from
+4.79 to 4.14.
+
+Knowing an unseen site's zoning improves the prediction of its counts, and by a margin
+nothing else approaches. Wave exposure makes prediction slightly worse, which is what an
+adjustment term carried for confounding control rather than for prediction can do. The
+two blocks that changed sign under the correction — environment and the regional year
+trends — are not distinguishable from zero either way.
+
+**How not to read this.** It does not partition variance, the entries do not sum to the
+model's performance, and it cannot be used to argue that management contributes more
+variance than site identity: that comparison is unavailable in this design by any route.
+It is not causal. A zoning label may predict an unseen site well because of what
+protection does, or because of whatever the zoning process selected for, and this
+analysis cannot tell those apart. The site random effect is deliberately absent from the
+table — it is integrated out of every prediction, so its row would measure nothing and
+would invite exactly the unsupported comparison above.
 
 ## Table 6 — Influence: leave one region-year out (Step 3)
 
