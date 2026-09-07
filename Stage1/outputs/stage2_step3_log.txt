@@ -63,12 +63,20 @@ Whitsunday: n = 287, deviance explained 60.7%
 ======================================================================
 5. LAGGED CYCLONE AND DISTRIBUTION SWAP
 ======================================================================
-The Stage 1 plan asked for cyclone exposure integrated across survey intervals.
-That is not possible from this extract: exposure is recorded only at survey
-points, and the intervening years are absent. A lagged term — the previous
-survey's value at the same site — is what the data can support, and it is a
-weaker substitute. Proper integration needs external cyclone track data, which
-goes on the list of questions for AIMS.
+EXPLORATORY, NOT PRESPECIFIED. Section 10 of the project plan names five checks:
+leave-one-region-year-out influence, restriction to the sheltered stratum, each
+region fitted alone, with and without the Whitsunday 2017 survey, and a
+distribution family swap. A lagged cyclone term is not among them. It was
+substituted after the fact for the cyclone integration the plan did ask for,
+which turned out to be impossible: exposure is recorded only at survey points
+and the intervening years are absent from the extract. A lag over unequal
+survey gaps is a weak substitute for integration over them, and it is reported
+here as an exploratory check rather than as one of the five. Proper integration
+needs external cyclone track data, which is on the list of questions for AIMS.
+
+The plan's fourth check — with and without Whitsunday 2017 — is not missing: it
+is covered by the leave-one-region-year-out analysis in section 1, which refits
+without that survey along with the other twelve.
 
 lagged-cyclone model: n = 396
                   edf Ref.df Chi.sq p-value
@@ -80,27 +88,27 @@ Tweedie model on the density scale: deviance explained 60.8%, p = 1.134
 ======================================================================
 6. PROTECTION UNDER EVERY SPECIFICATION
 ======================================================================
-                  spec     region protection ratio   lo   hi
-1       Full model (A)       Palm   NTR 1987  1.26 0.87 1.82
-2       Sheltered only       Palm   NTR 1987  0.47 0.23 0.97
-3  Region fitted alone       Palm   NTR 1987  1.12 0.72 1.73
-4       Lagged cyclone       Palm   NTR 1987  1.32 0.87 2.00
-5   Tweedie on density       Palm   NTR 1987  1.25 0.87 1.79
-11      Full model (A)       Palm   NTR 2004  0.95 0.54 1.69
-12      Sheltered only       Palm   NTR 2004  1.18 0.63 2.18
-13 Region fitted alone       Palm   NTR 2004  1.42 0.72 2.80
-14      Lagged cyclone       Palm   NTR 2004  0.68 0.36 1.27
-15  Tweedie on density       Palm   NTR 2004  1.00 0.57 1.76
-6       Full model (A) Whitsunday   NTR 1987  3.21 2.25 4.58
-7       Sheltered only Whitsunday   NTR 1987  2.58 1.54 4.32
-8  Region fitted alone Whitsunday   NTR 1987  2.73 1.83 4.08
-9       Lagged cyclone Whitsunday   NTR 1987  2.96 2.05 4.28
-10  Tweedie on density Whitsunday   NTR 1987  3.24 2.31 4.54
-16      Full model (A) Whitsunday   NTR 2004  2.89 1.97 4.23
-17      Sheltered only Whitsunday   NTR 2004  1.87 1.09 3.21
-18 Region fitted alone Whitsunday   NTR 2004  2.49 1.61 3.86
-19      Lagged cyclone Whitsunday   NTR 2004  2.68 1.81 3.96
-20  Tweedie on density Whitsunday   NTR 2004  2.86 1.98 4.12
+                           spec     region protection ratio   lo   hi
+1                Full model (A)       Palm   NTR 1987  1.26 0.87 1.82
+2                Sheltered only       Palm   NTR 1987  0.47 0.23 0.97
+3           Region fitted alone       Palm   NTR 1987  1.12 0.72 1.73
+4  Lagged cyclone (exploratory)       Palm   NTR 1987  1.32 0.87 2.00
+5            Tweedie on density       Palm   NTR 1987  1.25 0.87 1.79
+11               Full model (A)       Palm   NTR 2004  0.95 0.54 1.69
+12               Sheltered only       Palm   NTR 2004  1.18 0.63 2.18
+13          Region fitted alone       Palm   NTR 2004  1.42 0.72 2.80
+14 Lagged cyclone (exploratory)       Palm   NTR 2004  0.68 0.36 1.27
+15           Tweedie on density       Palm   NTR 2004  1.00 0.57 1.76
+6                Full model (A) Whitsunday   NTR 1987  3.21 2.25 4.58
+7                Sheltered only Whitsunday   NTR 1987  2.58 1.54 4.32
+8           Region fitted alone Whitsunday   NTR 1987  2.73 1.83 4.08
+9  Lagged cyclone (exploratory) Whitsunday   NTR 1987  2.96 2.05 4.28
+10           Tweedie on density Whitsunday   NTR 1987  3.24 2.31 4.54
+16               Full model (A) Whitsunday   NTR 2004  2.89 1.97 4.23
+17               Sheltered only Whitsunday   NTR 2004  1.87 1.09 3.21
+18          Region fitted alone Whitsunday   NTR 2004  2.49 1.61 3.86
+19 Lagged cyclone (exploratory) Whitsunday   NTR 2004  2.68 1.81 3.96
+20           Tweedie on density Whitsunday   NTR 2004  2.86 1.98 4.12
 
 ======================================================================
 7. FIGURES

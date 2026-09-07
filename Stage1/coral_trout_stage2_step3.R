@@ -15,7 +15,10 @@
 #                  exposure are far better balanced. Removes the confound
 #                  without assuming a functional form for it.
 #   3. Separation  each region fitted on its own.
-#   4. Cyclone     a lagged term, since disturbance effects need not be
+#   4. Cyclone     a lagged term — EXPLORATORY, not one of the plan's five
+#                  checks; substituted after the fact for the cyclone
+#                  integration the plan asked for, which the extract cannot
+#                  support. Disturbance effects need not be
 #                  contemporaneous.
 #   5. Family      Tweedie on the density scale, to confirm nothing rests
 #                  on the negative binomial choice.
@@ -172,12 +175,20 @@ for (r in c("Palm", "Whitsunday")) {
 # 5. LAGGED CYCLONE, AND A DIFFERENT DISTRIBUTION
 # ---------------------------------------------------------------------
 rule("5. LAGGED CYCLONE AND DISTRIBUTION SWAP")
-say("The Stage 1 plan asked for cyclone exposure integrated across survey intervals.")
-say("That is not possible from this extract: exposure is recorded only at survey")
-say("points, and the intervening years are absent. A lagged term — the previous")
-say("survey's value at the same site — is what the data can support, and it is a")
-say("weaker substitute. Proper integration needs external cyclone track data, which")
-say("goes on the list of questions for AIMS.\n")
+say("EXPLORATORY, NOT PRESPECIFIED. Section 10 of the project plan names five checks:")
+say("leave-one-region-year-out influence, restriction to the sheltered stratum, each")
+say("region fitted alone, with and without the Whitsunday 2017 survey, and a")
+say("distribution family swap. A lagged cyclone term is not among them. It was")
+say("substituted after the fact for the cyclone integration the plan did ask for,")
+say("which turned out to be impossible: exposure is recorded only at survey points")
+say("and the intervening years are absent from the extract. A lag over unequal")
+say("survey gaps is a weak substitute for integration over them, and it is reported")
+say("here as an exploratory check rather than as one of the five. Proper integration")
+say("needs external cyclone track data, which is on the list of questions for AIMS.")
+say("")
+say("The plan's fourth check — with and without Whitsunday 2017 — is not missing: it")
+say("is covered by the leave-one-region-year-out analysis in section 1, which refits")
+say("without that survey along with the other twelve.\n")
 
 dlag <- droplevels(d[!is.na(d$Cyclone_lag), ])
 mLag <- fitA(dlag, update(FORM, . ~ . + s(Cyclone_lag, k = 5)))
@@ -207,7 +218,7 @@ for (lev in c("NTR 1987", "NTR 2004")) for (reg in c("Palm", "Whitsunday")) {
   add("Full model (A)",      reg, lev, rr(mFull, reg, lev))
   add("Sheltered only",      reg, lev, rr(mSh,   reg, lev))
   add("Region fitted alone", reg, lev, rr1(if (reg == "Palm") mPalm else mWhit, lev))
-  add("Lagged cyclone",      reg, lev, rr(mLag,  reg, lev))
+  add("Lagged cyclone (exploratory)", reg, lev, rr(mLag,  reg, lev))
   add("Tweedie on density",  reg, lev, rr(mTw,   reg, lev))
 }
 allp <- do.call(rbind, rows); rownames(allp) <- NULL

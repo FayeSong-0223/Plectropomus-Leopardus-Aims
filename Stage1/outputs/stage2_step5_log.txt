@@ -220,10 +220,18 @@ site-year random slope model: fitted, REML 1197.5 against 1197.4 for the random-
 2             Zero-trimmed 3.27 (2.31-4.63) 2.89 (1.98-4.22)
 3 + site-year random slope 3.27 (2.10-5.08) 2.90 (1.79-4.71)
 
-Neither the zero excess nor allowing sites their own time trajectory moves the
-Whitsunday estimate materially. A zero excess inflates apparent overdispersion,
-which widens intervals rather than narrowing them, so it cannot manufacture a
-result; it is reported as a limitation on the distributional form.
+What this does and does not show. Neither sensitivity available here moves the
+Whitsunday estimate materially: trimming the mostly-zero site and allowing sites
+their own time trajectory both leave it where it was, with wider intervals in the
+second case. There is also a general argument that a zero excess inflates apparent
+overdispersion, which widens intervals rather than narrowing them.
+
+That is weaker than saying the zero excess cannot affect the result, and the
+stronger claim is not made. The test that would settle it is a refit under a
+distribution built for the excess — a hurdle or zero-inflated negative binomial —
+and no such model was fitted here. Until one is, the correct statement is that
+the sensitivities that were run did not change the estimate, not that the
+distributional misfit is harmless.
 
 ======================================================================
 6b. OBSERVED AGAINST FITTED (FINAL MODEL)
@@ -244,8 +252,15 @@ would produce, so systematic departure is visible rather than inferred.
 9  (9.06,11.8] 47       10.21         10.64 0.64  0.67
 10 (11.8,24.8] 47       15.64         15.98 0.86  0.40
 
-|z| above 2 in any bin would mean the mean structure is wrong at that level of
-density. Bins flagged: 1
+The z column is descriptive, not a test. The bins are defined by the fitted values
+themselves, the ten of them are not independent, and no multiplicity or selection
+adjustment is applied, so |z| > 2 in one bin is not a rejection of anything. Read
+the column as a scale for how far each bin sits from its prediction relative to
+the noise in that bin, and read the pattern across bins rather than any single
+value.
+
+Bins where |z| exceeds 2: 1. The lowest-density bin is the one to watch, and it is the zero excess of section
+5-6 seen from another angle rather than a separate problem.
 
 ======================================================================
 7. MULTIPLICITY WITHIN HYPOTHESIS FAMILIES

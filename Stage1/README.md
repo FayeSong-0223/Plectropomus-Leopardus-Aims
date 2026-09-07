@@ -32,12 +32,15 @@ together as a null:
 
 The five specifications are: the full model, restriction to the sheltered stratum,
 each region fitted alone, a lagged cyclone term, and a Tweedie refit on the density
-scale.
+scale. Four of those were named in the project plan before anything was run. The
+**lagged cyclone term was not** — it is exploratory, substituted after the fact for the
+cyclone integration the plan asked for, which this extract cannot support because
+exposure is recorded only at survey points.
 
 The one exception matters and is not buried. Restricted to sheltered sites — the
 specification that handles the exposure confound by design rather than by adjustment —
-Palm NTR 1987 is **0.47 (0.23–0.97)**, significantly *below* 1, where every other
-specification puts it between 1.1 and 1.4. It rests on six fished and five reserve
+Palm NTR 1987 is **0.47 (0.23–0.97)**, below 1 though its interval reaches close to
+it, where every other specification puts it between 1.1 and 1.4. It rests on six fished and five reserve
 sites. The plan's own rule for this check was to distrust the adjusted estimate when
 the restriction disagrees, so the honest reading is that Palm is unresolved rather than
 null. Whitsunday is unaffected: the same restriction gives 2.58 (1.54–4.32).
@@ -58,8 +61,16 @@ measured in a model with no random effect, which conflated management with every
 fixed about a site. Both are documented in `DECISIONS.md`.
 
 What is reported instead is a drop-one-block comparison at fixed dispersion —
-descriptive, non-additive, not variance shares — and out-of-sample prediction to sites
-the model has never seen, which is the one comparison the overlap does not spoil.
+descriptive, non-additive, not variance shares — and, as an **exploratory** result, an
+out-of-sample comparison predicting to sites the model has never seen.
+
+That second one is flagged exploratory for two specific reasons, both of which would
+have to be fixed before it could be quoted as inference. Its standard error is computed
+across the 467 held-out observations as though they were independent, when they cluster
+within 71 sites, so the reported z is optimistic. And predictions for an unseen site set
+its random effect to zero rather than integrating over the random-effect distribution;
+under a log link those are not the same thing, and the second is the correct predictive
+density. Both are fixable and neither has been fixed yet.
 
 **Habitat does not predict density.** None of rugosity (p = 0.097), live hard coral
 (p = 0.375) or depth (p = 0.099) is significant, and none survives a multiplicity
@@ -73,9 +84,15 @@ excluding 1 in any case once smoothing-parameter uncertainty is admitted.
 bootstrap that refits every replicate and redraws the site effects from their estimated
 distribution, the data hold about 16 more zeros than the model expects, against a
 simulated distribution centred near 1 (p = 0.003, 300 replicates). It is a limitation on
-the distributional form — a hurdle or zero-inflated model belongs in any second version.
-It does not drive the result: excess zeros inflate apparent overdispersion, which widens
-intervals rather than narrowing them.
+the distributional form.
+
+What can be said about its consequences is narrower than it might appear. The two
+sensitivities available here — trimming the mostly-zero site, and giving sites their own
+time trajectory — did not materially change the estimate, and there is a general argument
+that a zero excess inflates apparent overdispersion and so widens intervals rather than
+narrowing them. But **no hurdle or zero-inflated negative binomial was fitted**, and that
+is the refit that would actually settle it. The honest statement is that the checks that
+were run did not move the estimate, not that the misfit is harmless.
 
 **Residual temporal correlation: unresolved.** The most negative residual correlation
 across the eleven survey gaps is −0.376, against a simulated null centred on −0.259
@@ -101,13 +118,22 @@ randomised quantile residuals, so anything computed from them depends on the see
 earlier single-seed run reported I = 0.146, p = 0.007, which overstated it. Suggestive,
 not conclusive.
 
-**Only one environmental term is left standing, and not firmly.** Intervals here use
-the unconditional covariance matrix, which admits the uncertainty in the smoothing
-parameters. Under it, rugosity (1.27, 0.98–1.64), turbidity (0.75, 0.55–1.01) and
-cyclone exposure (0.85, 0.67–1.06) all cease to exclude 1. Only the thermal term does,
-at 0.68 (0.48–0.96), and it is the only environmental term to survive a multiplicity
-correction as well. Turbidity and rugosity are also unstable to which single survey is
-omitted (p = 0.005–0.126 and 0.021–0.192).
+**Only one environmental term is left standing, and it should be read cautiously.**
+Intervals here use the unconditional covariance matrix, which admits the uncertainty in
+the smoothing parameters. Under it, rugosity (1.27, 0.98–1.64), turbidity (0.75,
+0.55–1.01) and cyclone exposure (0.85, 0.67–1.06) all cease to exclude 1. Only the
+thermal term does, at 0.68 (0.48–0.96), and it is the only environmental term to survive
+the multiplicity correction as well.
+
+That is a weaker position than "one effect established". `s(maxDHW)` has worst-case
+concurvity 0.951 against the region-specific year trends, so its coefficient is one
+possible split of variation those terms share rather than an independently identified
+effect — and the year smooths themselves carry a basis-dimension flag that does not
+clear at the largest k the survey years allow. The thermal association is consistent
+with the data and is not established by them. Turbidity is unresolved on three separate
+grounds: its interval includes 1, its p-value ranges 0.005–0.126 depending on which
+single survey is omitted, and its own basis flag does not clear at k = 20. Rugosity is
+likewise unstable (p = 0.021–0.192).
 
 **The thermal curve is only half identified.** `s(maxDHW)` is significant, but the
 fitted curve rises above 4 degree heating weeks — where Whitsunday 2017 is the only
@@ -223,7 +249,9 @@ and turned up three diagnostics that had never been run. All of it is in
   of the 18 sites surveyed, by factors of 2.1 to 6.8, and implied mean weight of legal
   fish is 0.30 kg against 1.10–2.17 kg in every other region-year. Total density
   recovers cleanly on the same step, so survey area is unchanged, and the discrepancy
-  is not a constant multiple. Is this known?
+  is not a constant multiple. Is this known? (The whole extract holds 18 such rows: the
+  eighteenth is Whitsunday 2018 site HY3, excess 0.0018 — a rounding artefact, not the
+  same thing.)
 
 ## Data
 

@@ -112,12 +112,24 @@ the site random effect.
 
 ## Table 15 — Out-of-sample prediction to unseen sites (Step 2)
 
-The one Q2 comparison the management/site overlap does not spoil. Ten folds split by
-site, so a site is never in both training and test. Each model is fitted on the training
-sites and scored on held-out sites by negative binomial log predictive density, with the
-random effect set to zero — an unseen site has no intercept to estimate, so the fixed
-effects carry the prediction alone. Total log predictive density of the full model
+**Exploratory.** This is the one Q2 comparison the management/site overlap does not
+spoil, but two corrections are outstanding and it should not be quoted as inference
+until they are made. Ten folds split by site, so a site is never in both training and
+test. Each model is fitted on the training sites and scored on held-out sites by
+negative binomial log predictive density. Total log predictive density of the full model
 across all held-out sites: −1232.3.
+
+What needs fixing, precisely:
+
+1. **The standard error is not clustered.** It is computed across the 467 held-out
+   observations as though they were independent, when they cluster within 71 sites. A
+   site-level standard error — aggregating the per-observation difference within each
+   site before taking the spread across sites — would be larger, and the z below
+   correspondingly smaller.
+2. **Unseen-site random effects are set to zero rather than integrated.** Under a log
+   link, the prediction at the median of the random-effect distribution is not its mean.
+   The correct predictive density integrates over N(0, σ²) rather than evaluating at
+   zero, which shifts every predicted mean upward and changes the density.
 
 | Block removed | Loss in log predictive density | SE | Per observation | z |
 |---|---:|---:|---:|---:|
@@ -127,9 +139,11 @@ across all held-out sites: −1232.3.
 | Regional year trends | −3.4 | 8.6 | −0.007 | −0.40 |
 | Wave exposure (confounder) | −9.7 | 2.7 | −0.021 | −3.59 |
 
-Knowing an unseen site's zoning improves the prediction of its counts substantially.
-Nothing else measurably does; wave exposure makes it slightly worse, which is what an
-adjustment term carried for confounding control rather than for prediction can do.
+The direction is clear — knowing an unseen site's zoning improves the prediction of its
+counts, and nothing else measurably does; wave exposure makes it slightly worse, which
+is what an adjustment term carried for confounding control rather than for prediction
+can do. The **magnitude and the z should be treated as indicative only** until the two
+corrections above are applied.
 
 **How not to read this.** It is a predictive statement. It does not partition variance,
 the entries do not sum to the model's performance, and it cannot be used to argue that
@@ -161,7 +175,13 @@ neither is reliably distinguishable from zero.
 
 Density ratio against fished sites, 95% intervals.
 
-| Region | Protection | Full (A) | Sheltered only | Region alone | Lagged cyclone | Tweedie |
+Four of these five were named in the project plan before anything was run. The
+**lagged cyclone column is exploratory** — it was substituted after the fact for the
+cyclone integration the plan asked for, which this extract cannot support because
+exposure is recorded only at survey points. The plan's remaining prespecified check,
+with and without Whitsunday 2017, is covered by table 6.
+
+| Region | Protection | Full (A) | Sheltered only | Region alone | Lagged cyclone (exploratory) | Tweedie |
 |---|---|---|---|---|---|---|
 | Palm | NTR 1987 | 1.26 (0.87–1.82) | **0.47 (0.23–0.97)** | 1.12 (0.72–1.73) | 1.32 (0.87–2.00) | 1.25 (0.87–1.79) |
 | Palm | NTR 2004 | 0.95 (0.54–1.69) | 1.18 (0.63–2.18) | 1.42 (0.72–2.80) | 0.68 (0.36–1.27) | 1.00 (0.57–1.76) |
@@ -346,9 +366,14 @@ p is computed as (extreme + 1) / (B + 1) and is never zero; the smallest attaina
 value with 300 replicates is 0.0033.
 
 **Zeros: a real excess.** About 16 more zeros than the model expects. The negative
-binomial is not a complete description of the zero process; a hurdle or zero-inflated
-formulation belongs in a second version. It does not drive the result — excess zeros
-inflate apparent overdispersion, which widens intervals rather than narrowing them.
+binomial is not a complete description of the zero process.
+
+On consequences, the narrow claim only: the two sensitivities in table 16 did not
+materially change the estimate, and there is a general argument that a zero excess
+inflates apparent overdispersion and so widens intervals rather than narrowing them.
+**No hurdle or zero-inflated negative binomial was fitted**, and that refit is what
+would settle it. What is supported is that the checks that were run did not move the
+estimate — not that the misfit is harmless.
 
 **Residual temporal correlation: unresolved.** p = 0.080 falls between 0.01 and 0.10 and
 is reported as uncertain rather than pushed across a threshold. An earlier version
@@ -383,6 +408,12 @@ flexibility, not a change in the estimate.
 Step 1 checked this for the baseline; the final model had never been checked the same
 way. Deciles of fitted value, with the standard error of the observed mean in each bin.
 
+The **z column is descriptive, not a test.** The bins are defined by the fitted values
+themselves, the ten are not independent, and no multiplicity or selection adjustment is
+applied — so |z| > 2 in one bin is not a rejection. Read it as a scale for how far each
+bin sits from its prediction relative to the noise in that bin, and read the pattern
+across bins rather than any single value.
+
 | Bin (fitted) | n | Fitted mean | Observed mean | SE | z |
 |---|---:|---:|---:|---:|---:|
 | 0.57 – 1.80 | 47 | 1.34 | 0.91 | 0.21 | −2.05 |
@@ -396,9 +427,10 @@ way. Deciles of fitted value, with the standard error of the observed mean in ea
 | 9.06 – 11.8 | 47 | 10.21 | 10.64 | 0.64 | 0.67 |
 | 11.8 – 24.8 | 47 | 15.64 | 15.98 | 0.86 | 0.40 |
 
-One bin is flagged: the lowest, where the model over-predicts slightly (z = −2.05). That
-is the same phenomenon the zero test picks up, seen from the other side. Elsewhere the
-mean structure tracks the data closely.
+The lowest bin is the one to watch: the model over-predicts there (z = −2.05), which is
+the zero excess of table 13 seen from another angle rather than a separate problem.
+Elsewhere the mean structure tracks the data closely, with no systematic drift across
+the range.
 
 ## Table 18 — Basis dimension, tested rather than asserted (Step 5)
 

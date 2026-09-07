@@ -419,3 +419,68 @@ out exposure as the explanation, but reserve placement was not random and no
 observational check here establishes that whatever else distinguishes the zoned sites is
 innocuous. Palm is unresolved, not null. Q2 yields no identifiable management
 percentage.
+
+---
+
+## Review refinements, 2026-09-07 (same day)
+
+Six points from review. Five are wording; one is a substantive limitation now stated
+rather than fixed.
+
+**The cross-validated Q2 result is downgraded to exploratory.** Two defects, neither
+corrected:
+
+1. Its standard error treats the 467 held-out observations as independent when they
+   cluster within 71 sites, so the reported z of 4.96 is optimistic. A site-clustered
+   standard error would be larger.
+2. Predictions for an unseen site set the random effect to zero rather than integrating
+   over N(0, sigma^2). Under a log link the prediction at the median of that
+   distribution is not its mean, so the quantity being scored is not quite the
+   predictive density it is described as.
+
+The direction — that knowing an unseen site's zoning improves prediction and nothing
+else measurably does — is not in doubt. The magnitude and the z are. Both defects are
+straightforward to fix and doing so requires rerunning Step 2; that has not been done,
+and the result is labelled exploratory everywhere it appears rather than quietly
+carried at full weight.
+
+**The claim that excess zeros cannot manufacture the result is withdrawn.** What is
+supported is narrower: the two sensitivities available — trimming the mostly-zero site,
+and giving sites their own time trajectory — did not materially change the estimate, and
+a zero excess inflates apparent overdispersion, which widens intervals rather than
+narrowing them. But **no hurdle or zero-inflated negative binomial was fitted**, and that
+refit is the one that would settle it. The reports now say the checks that were run did
+not move the estimate, and stop there.
+
+**The Stage 1 note now reports the anomaly count correctly.** 18 rows in the extract
+where legal density exceeds total density: 17 in Keppel 2021 at factors of 2.1 to 6.8,
+and one in Whitsunday 2018 site HY3 where the excess is 0.0018 — a rounding artefact,
+not the same phenomenon. The note previously attributed all 18 to Keppel 2021.
+
+**The lagged cyclone check is labelled exploratory.** Section 10 of the plan names five
+checks and a lagged cyclone term is not among them; it was substituted after the fact for
+the cyclone integration the plan did ask for, which the extract cannot support. It now
+appears as an exploratory column rather than as one of the five. The plan's fourth check,
+with and without Whitsunday 2017, is covered by the leave-one-region-year-out analysis,
+and that is now said explicitly instead of left implicit.
+
+**Thermal and environmental conclusions are stated more cautiously.** The thermal term
+survives both the unconditional interval and the multiplicity correction, but its
+worst-case concurvity against the region-specific year trends is 0.951, and those year
+smooths themselves carry a basis flag that does not clear at k = 6, the largest the
+survey years allow. Two of the terms competing for the same variation are imperfectly
+specified. The association is consistent with the data rather than established by them,
+and should not be quoted as a quantity without the concurvity alongside it.
+
+**Observed-against-fitted z values are labelled descriptive.** The bins are defined by
+the fitted values, the ten are not independent, and no selection or multiplicity
+adjustment is applied, so |z| > 2 in one bin is not a rejection of anything. The lowest
+bin's z of −2.05 is the zero excess seen from another angle rather than a separate
+finding.
+
+**Figure 16.** Panel a's axis label was clipped at the panel edge; shortened.
+
+Steps 3 and 5 were rerun twice each to regenerate what these changes touch, and produce
+byte-identical output across the two runs. Steps 1, 2 and 4 were not rerun and their
+outputs are unchanged from the two full clean runs recorded above; a file-by-file
+comparison confirms that only the step 3 and step 5 outputs differ.

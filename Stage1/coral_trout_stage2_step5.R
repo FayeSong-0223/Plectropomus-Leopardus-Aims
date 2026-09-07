@@ -456,10 +456,18 @@ sens <- do.call(rbind, lapply(rows, function(z) {
 }))
 cap(sens)
 write.csv(sens, file.path(OUT, "table16_gof_sensitivity.csv"), row.names = FALSE)
-say("\nNeither the zero excess nor allowing sites their own time trajectory moves the")
-say("Whitsunday estimate materially. A zero excess inflates apparent overdispersion,")
-say("which widens intervals rather than narrowing them, so it cannot manufacture a")
-say("result; it is reported as a limitation on the distributional form.")
+say("\nWhat this does and does not show. Neither sensitivity available here moves the")
+say("Whitsunday estimate materially: trimming the mostly-zero site and allowing sites")
+say("their own time trajectory both leave it where it was, with wider intervals in the")
+say("second case. There is also a general argument that a zero excess inflates apparent")
+say("overdispersion, which widens intervals rather than narrowing them.")
+say("")
+say("That is weaker than saying the zero excess cannot affect the result, and the")
+say("stronger claim is not made. The test that would settle it is a refit under a")
+say("distribution built for the excess — a hurdle or zero-inflated negative binomial —")
+say("and no such model was fitted here. Until one is, the correct statement is that")
+say("the sensitivities that were run did not change the estimate, not that the")
+say("distributional misfit is harmless.")
 
 # ---------------------------------------------------------------------
 # 6b. OBSERVED AGAINST FITTED, FINAL MODEL
@@ -480,9 +488,18 @@ of <- do.call(rbind, lapply(levels(bin), function(b) {
 of$z <- round((of$observed_mean - of$fitted_mean) / of$se, 2)
 cap(of)
 write.csv(of, file.path(OUT, "table17_observed_vs_fitted.csv"), row.names = FALSE)
-say("\n|z| above 2 in any bin would mean the mean structure is wrong at that level of")
-say("density. Bins flagged: ",
-    if (any(abs(of$z) > 2, na.rm = TRUE)) paste(which(abs(of$z) > 2), collapse = ", ") else "none")
+say("")
+say("The z column is descriptive, not a test. The bins are defined by the fitted values")
+say("themselves, the ten of them are not independent, and no multiplicity or selection")
+say("adjustment is applied, so |z| > 2 in one bin is not a rejection of anything. Read")
+say("the column as a scale for how far each bin sits from its prediction relative to")
+say("the noise in that bin, and read the pattern across bins rather than any single")
+say("value.")
+say("")
+say("Bins where |z| exceeds 2: ",
+    if (any(abs(of$z) > 2, na.rm = TRUE)) paste(which(abs(of$z) > 2), collapse = ", ") else "none",
+    ". The lowest-density bin is the one to watch, and it is the zero excess of section")
+say("5-6 seen from another angle rather than a separate problem.")
 
 # ---------------------------------------------------------------------
 # 7. MULTIPLICITY, BY HYPOTHESIS FAMILY
@@ -549,7 +566,7 @@ par(mfrow = c(1, 2), mar = c(3.9, 3.9, 2.8, 0.9)); base_par()
 h <- hist(S[, 1], breaks = 24, plot = FALSE)
 plot(h, col = "grey88", border = "white",
      xlim = range(c(h$breaks, obs_zero)) + c(-1, 3),
-     xlab = "Observed minus model-expected zeros, in simulated data",
+     xlab = "Observed minus expected zeros (simulated)",
      ylab = "Replicates", main = "a  Zero counts against a parametric bootstrap",
      font.main = 1, cex.main = 0.88, adj = 0)
 abline(v = obs_zero, col = RED, lwd = 2.2)
@@ -562,7 +579,7 @@ mtext(sprintf("p = %.3f, %d refits", p_zero, nrow(S)), side = 3, line = -1.1,
 h2 <- hist(S[, 2], breaks = 24, plot = FALSE)
 plot(h2, col = "grey88", border = "white",
      xlim = range(c(h2$breaks, obs_min)) + c(-0.03, 0.03),
-     xlab = "Most negative gap correlation, in simulated data",
+     xlab = "Most negative gap correlation (simulated)",
      ylab = "Replicates", main = "b  Residual correlation, search over all gaps",
      font.main = 1, cex.main = 0.88, adj = 0)
 abline(v = obs_min, col = RED, lwd = 2.2)
