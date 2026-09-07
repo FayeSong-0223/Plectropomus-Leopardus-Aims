@@ -172,19 +172,23 @@ anything, and they are not shares of total variation.
 ----------------------------------------------------------------------
 The in-sample comparisons above cannot separate management from site identity
 because both are fitted to the same sites. Prediction to a site the model has
-never seen removes that overlap: for an unseen site there is no random intercept
-to estimate, so the fixed effects have to carry the prediction alone, and
-management either helps or it does not.
+never seen removes that overlap: for an unseen site the random intercept is
+unknown rather than estimated, so it is integrated out, and the question becomes
+whether the fixed effects alone predict a new site's counts any better with
+management in the model than without it.
 
 Ten folds, split by SITE so that a site is never in both training and test.
 Each model is fitted on the training sites and scored on the held-out sites by
-negative binomial log predictive density, with the random effect set to zero for
-unseen sites and each model using its own theta — a predictive comparison is
-between complete distributions, so re-estimating theta is correct here.
+the MARGINAL negative binomial log predictive density of individual site-year
+counts — the site effect integrated over N(0, sigma^2) rather than set to zero,
+since under a log link the density at the median of that distribution is not its
+mean. Each model uses its own theta: a predictive comparison is between complete
+distributions, so re-estimating theta is correct here.
 
-This measures predictive contribution, not a share of variance, and it does not
-license a causal reading: a zoning label may predict a new site well because of
-what protection does, or because of what protection is correlated with.
+This is exploratory. It measures predictive contribution, not a share of
+variance, and it does not license a causal reading: a zoning label may predict a
+new site well because of what protection does, or because of what protection is
+correlated with.
 
 site-effect SD estimated separately in each training fold: 0.339, 0.283, 0.321, 0.304, 0.323, 0.305, 0.305, 0.271, 0.320, 0.275
 

@@ -49,21 +49,32 @@ Nothing here is causal. Protection was not assigned at random.
 
 ## What else the analysis found
 
-**How much does management explain? This design cannot say.** Protection changes
-within 0 of 71 sites, so its entire contribution is between-site — and a site random
-intercept is also entirely between-site. The two are estimated from the same degrees of
-freedom, and no partition of variance or deviance can say how much of a between-site
-difference belongs to zoning rather than to whatever else distinguishes those sites.
-That is a limit of the design, not of the method, and no better statistic fixes it. Two
-earlier attempts to put a number on it have been withdrawn: a variance share of 48.1%
-that turned out to depend on the coding of the factor contrasts, and a deviance drop
-measured in a model with no random effect, which conflated management with everything
-fixed about a site. Both are documented in `DECISIONS.md`.
+**How much does management explain? Not as a unique variance share.** Protection
+changes within 0 of 71 sites, so its entire contribution is between-site — and a site
+random intercept is also entirely between-site. The two draw on the same degrees of
+freedom, and the consequence is specific: **there is no unique, assumption-invariant
+variance share to report.** Any number that appears to separate them is doing so on the
+strength of an assumption the data do not test — a choice of contrast coding, or the
+removal of the random effect — and a different, equally defensible assumption gives a
+different number.
+
+That is a statement about what this design identifies, not a claim that the question is
+unanswerable in principle: a design with protection changing within sites, or with
+external information about how sites were selected for zoning, could address it. Two
+earlier attempts here have been withdrawn — a variance share of 48.1% that depended on
+the coding of the factor contrasts, and a deviance drop measured in a model with no
+random effect, which conflated management with everything else fixed about a site. Both
+are documented in `DECISIONS.md`.
 
 What is reported instead is a drop-one-block comparison at fixed dispersion —
-descriptive, non-additive, not variance shares — and an out-of-sample comparison
-predicting to sites the model has never seen. The second is **exploratory,
-observational and not causal**, and stays that way whatever its z-value.
+descriptive, non-additive, not variance shares — and an exploratory out-of-sample
+comparison. On the first, the **site random effect has the largest point estimate** of
+any block, at 9.76 percentage points of deviance explained; its bootstrap interval
+(1.30–12.43) overlaps those of environment (1.03–6.51) and the regional year trends
+(1.13–5.79), so the ordering among blocks is not established and only the point estimate
+is highest. H4 is supported in direction rather than demonstrated as a ranking. That second one predicts **individual site-year counts at sites the model
+has never seen, marginally over the unknown site effect**. It is exploratory,
+observational and not causal, and stays that way whatever its z.
 
 Both defects an earlier version of that comparison carried have now been corrected. The
 unseen-site random effect is integrated over rather than set to zero — under a log link
@@ -83,13 +94,21 @@ treating all 467 held-out observations as independent.
 
 The integration was much the larger correction — management's Δlpd fell from 87.3 to
 48.4; clustering moved its z from 4.79 to 4.14. Knowing an unseen site's zoning improves
-prediction of its counts and nothing else measurably does.
+the marginal prediction of its counts, by a margin the other blocks do not reach here;
+whether those others contribute little or the design simply lacks the resolution to
+detect it is not something ten folds over 71 sites can settle.
 
-That is a predictive statement and nothing more. It does not partition variance, it
-cannot be used to argue that management contributes more variance than site identity —
-that comparison is unavailable here by any route — and it is not causal: a zoning label
-may predict an unseen site well because of what protection does, or because of whatever
-the zoning process selected for, and this analysis cannot tell those apart.
+**The z is descriptive, not a formal test.** It is a ratio of a cross-validated
+difference to a bootstrap-free clustered standard error, computed on folds chosen by
+one seed, with the blocks selected in advance but no adjustment for comparing five of
+them. Read it as an indication of how large the difference is relative to its
+site-to-site variability, not as a p-value in disguise.
+
+The result is a predictive statement and nothing more. It does not partition variance,
+it does not license a claim that management contributes more variance than site
+identity, and it is not causal: a zoning label may predict an unseen site well because
+of what protection does, or because of whatever the zoning process selected for, and
+this analysis cannot tell those apart.
 
 **Habitat does not predict density.** None of rugosity (p = 0.097), live hard coral
 (p = 0.375) or depth (p = 0.099) is significant, and none survives a multiplicity
@@ -113,16 +132,20 @@ narrowing them. But **no hurdle or zero-inflated negative binomial was fitted**,
 is the refit that would actually settle it. The honest statement is that the checks that
 were run did not move the estimate, not that the misfit is harmless.
 
-**Residual temporal correlation: unresolved.** The most negative residual correlation
-across the eleven survey gaps is −0.376, against a simulated null centred on −0.259
-(95% interval −0.452 to −0.176), giving p = 0.080. That sits between 0.01 and 0.10 and
-is reported as uncertain rather than pushed across a threshold. An earlier version of
-this analysis called it a clear finding at p < 0.001 and offered an explanation for it;
-that came from testing against zero rather than against the correlation a site random
-intercept induces, from picking the strongest of eleven gaps after seeing them, and from
-simulating without redrawing the site effects. Correcting all three is what moved it into
-the uncertain band. No mechanism is proposed: there is no covariate here that would
-distinguish one.
+**Residual temporal correlation: unresolved, and treated as exploratory.** The most
+negative residual correlation across the eleven survey gaps is −0.376, which sits inside
+the range a correctly specified model produces by itself once the site random effect is
+redrawn — a simulated null centred on −0.259 with a 95% interval of −0.452 to −0.176.
+The observed value is toward the extreme of that null without being clearly outside it,
+so the check neither confirms nor rules out residual temporal structure and is left
+unresolved rather than pushed to one side.
+
+An earlier version reported this as a clear finding and offered an explanation for it.
+That came from testing the raw correlation against zero rather than against the
+correlation a site random intercept induces by construction, from selecting the
+strongest of eleven gaps after seeing them, and from simulating without redrawing the
+site effects. Each made the test more permissive. No mechanism is proposed for what
+remains: there is no covariate here that would distinguish one.
 
 **Neither diagnostic moves the protection estimate.** Trimming the mostly-zero site gives
 3.27 (2.31–4.63); adding a site-level random slope on year gives 3.27 (2.10–5.08), the
@@ -137,22 +160,27 @@ randomised quantile residuals, so anything computed from them depends on the see
 earlier single-seed run reported I = 0.146, p = 0.007, which overstated it. Suggestive,
 not conclusive.
 
-**Only one environmental term is left standing, and it should be read cautiously.**
-Intervals here use the unconditional covariance matrix, which admits the uncertainty in
-the smoothing parameters. Under it, rugosity (1.27, 0.98–1.64), turbidity (0.75,
-0.55–1.01) and cyclone exposure (0.85, 0.67–1.06) all cease to exclude 1. Only the
-thermal term does, at 0.68 (0.48–0.96), and it is the only environmental term to survive
-the multiplicity correction as well.
+**One environmental term is suggestive; none is established.** Intervals here use the
+unconditional covariance matrix, which admits the uncertainty in the smoothing
+parameters. Under it, rugosity (1.27, 0.98–1.64), turbidity (0.75, 0.55–1.01) and
+cyclone exposure (0.85, 0.67–1.06) all cease to exclude 1. Only the thermal term does,
+at 0.68 (0.48–0.96), and it is the only environmental term to survive the multiplicity
+correction as well.
 
-That is a weaker position than "one effect established". `s(maxDHW)` has worst-case
-concurvity 0.951 against the region-specific year trends, so its coefficient is one
-possible split of variation those terms share rather than an independently identified
-effect — and the year smooths themselves carry a basis-dimension flag that does not
-clear at the largest k the survey years allow. The thermal association is consistent
-with the data and is not established by them. Turbidity is unresolved on three separate
-grounds: its interval includes 1, its p-value ranges 0.005–0.126 depending on which
-single survey is omitted, and its own basis flag does not clear at k = 20. Rugosity is
-likewise unstable (p = 0.021–0.192).
+**That makes it suggestive, not established**, and three things stand between it and a
+firmer reading. `maxDHW` carries 99% of its variance between region-years, so the term
+rests on roughly a dozen region-year contrasts rather than on 467 observations. Its
+worst-case concurvity against the region-specific year trends is 0.951, so its
+coefficient is one possible split of variation those terms share rather than an
+independently identified effect. And those year smooths carry a basis-dimension warning
+that does not clear at k = 6, the largest the survey years allow — so one of the terms
+competing for that shared variation is itself unresolved. A negative association at
+moderate thermal stress is consistent with these data and worth pursuing with a design
+that can identify it; it is not demonstrated here.
+
+Turbidity is unresolved on three separate grounds: its interval includes 1, its p-value
+ranges 0.005–0.126 depending on which single survey is omitted, and its own basis flag
+does not clear at k = 20. Rugosity is likewise unstable (p = 0.021–0.192).
 
 **The thermal curve is only half identified.** `s(maxDHW)` is significant, but the
 fitted curve rises above 4 degree heating weeks — where Whitsunday 2017 is the only
@@ -180,11 +208,6 @@ split of shared variation rather than independently identified effects.
 site random effect (concurvity 1.000). It is fitted as a linear term instead, which
 gives identical estimates with no aliasing. Omitting it entirely raises the Whitsunday
 estimate to 3.62, so it is doing real adjustment work and is kept.
-
-**Protection changes within none of the 71 sites.** This is why Q2 has no answer in
-percentage terms. Anything fixed about a site — its zoning, its history, its position —
-is estimated from the same 71 between-site degrees of freedom as the site random
-intercept, and no method separates them.
 
 **The density scaling constant is not uniform** — 0.6666 in 2007–2017, 0.6660 in 2018.
 Deriving it per year recovers integers exactly. Assuming one value corrupts a year

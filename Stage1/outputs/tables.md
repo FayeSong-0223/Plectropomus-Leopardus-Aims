@@ -101,20 +101,27 @@ resamples. Deviance explained at fixed theta, full model: 59.5%.
 variance shares.
 
 The management row sits at or below zero because protection changes within none of the
-71 sites: it and the site random intercept are estimated from the same between-site
-degrees of freedom, so removing management hands its work to the random effect. That is
-not evidence of no effect — table 7 shows the Whitsunday estimate stable across every
-specification. It means deviance explained cannot separate the two.
+71 sites: it and the site random intercept draw on the same between-site degrees of
+freedom, so removing management hands its work to the random effect. That is not
+evidence of no effect — table 7 shows the Whitsunday estimate stable across every
+specification. It means deviance explained cannot separate the two, and there is no
+unique, assumption-invariant share to report.
 
 H4 expected unexplained site-level variation to be large relative to the measured
-covariates. Among the blocks that can be separated, it is: no covariate block approaches
-the site random effect.
+covariates. **The site random effect has the largest point estimate of any block here,
+at 9.76 percentage points**, and that is the correct way to state it: its bootstrap
+interval (1.30–12.43) overlaps those of environment (1.03–6.51) and the regional year
+trends (1.13–5.79), so the ordering among these blocks is not established, only its
+point estimate being highest. H4 is supported in direction rather than demonstrated as
+a ranking.
 
 ## Table 15 — Out-of-sample prediction to unseen sites (Step 2)
 
-**Exploratory, observational, and not causal.** This is the one Q2 comparison the
-management/site overlap does not spoil, and it remains a predictive statement about
-sites the model has not seen. It is not a variance share and carries no causal reading.
+**Exploratory, observational, and not causal.** What is scored here is the **marginal
+predictive density of individual site-year counts at sites the model has not seen** —
+marginal in the sense that the unknown site effect is integrated out rather than
+estimated. It is not a variance share, it is not a test, and it carries no causal
+reading.
 
 Ten folds split by site, so a site is never in both training and test. Each model is
 fitted on the training sites and scored on the held-out sites by negative binomial log
@@ -149,16 +156,25 @@ The integration was much the larger of the two corrections: management's Δlpd f
 Clustering the standard error contributed the smaller part, moving management's z from
 4.79 to 4.14.
 
-Knowing an unseen site's zoning improves the prediction of its counts, and by a margin
-nothing else approaches. Wave exposure makes prediction slightly worse, which is what an
-adjustment term carried for confounding control rather than for prediction can do. The
-two blocks that changed sign under the correction — environment and the regional year
-trends — are not distinguishable from zero either way.
+Knowing an unseen site's zoning improves the marginal prediction of its counts, by a
+margin the other blocks do not reach in this comparison. Whether those others contribute
+little or the design simply lacks the resolution to detect it is not something ten folds
+over 71 sites can settle, so the right reading is that only management shows a clear
+signal here — not that the rest have been shown to contribute nothing. Wave exposure
+makes prediction slightly worse, which is what an adjustment term carried for confounding
+control rather than for prediction can do. The two blocks that changed sign under the
+correction, environment and the regional year trends, are not distinguishable from zero
+either way.
+
+**The z column is descriptive, not a formal test.** It is a ratio of a cross-validated
+difference to a clustered standard error, computed on folds fixed by one seed, with the
+five blocks compared and no adjustment for that. Read it as an indication of size
+relative to site-to-site variability, not as a p-value in disguise.
 
 **How not to read this.** It does not partition variance, the entries do not sum to the
-model's performance, and it cannot be used to argue that management contributes more
-variance than site identity: that comparison is unavailable in this design by any route.
-It is not causal. A zoning label may predict an unseen site well because of what
+model's performance, and it does not license a claim that management contributes more
+variance than site identity — that would require a unique, assumption-invariant share,
+which this design does not yield. It is not causal. A zoning label may predict an unseen site well because of what
 protection does, or because of whatever the zoning process selected for, and this
 analysis cannot tell those apart. The site random effect is deliberately absent from the
 table — it is integrated out of every prediction, so its row would measure nothing and
@@ -385,15 +401,20 @@ inflates apparent overdispersion and so widens intervals rather than narrowing t
 would settle it. What is supported is that the checks that were run did not move the
 estimate — not that the misfit is harmless.
 
-**Residual temporal correlation: unresolved.** p = 0.080 falls between 0.01 and 0.10 and
-is reported as uncertain rather than pushed across a threshold. An earlier version
-reported this as a clear finding at p < 0.001 and offered an explanation for it; that
-came from testing against zero rather than against the correlation a site random
+**Residual temporal correlation: unresolved, and exploratory.** The observed value sits
+toward the extreme of the simulated null without being clearly outside it, so the check
+neither confirms nor rules out residual temporal structure. It is left unresolved rather
+than pushed to one side of a threshold, and the exact p is recorded in the table above
+rather than carried into the narrative, because reading it as a decision would be to
+treat an exploratory diagnostic as a formal test.
+
+An earlier version reported this as a clear finding and offered an explanation for it.
+That came from testing against zero rather than against the correlation a site random
 intercept induces, from selecting the strongest of eleven gaps after seeing them, and
 from simulating without redrawing the site effects. All three made the test more
 permissive. No mechanism is proposed for what remains: this analysis has no covariate
 that would distinguish one, and the survey design cannot separate candidates. More
-replicates would sharpen the p-value but change no conclusion here, so none were added.
+replicates would sharpen the estimate but change no conclusion here, so none were added.
 
 Observed correlations by gap, for the record:
 

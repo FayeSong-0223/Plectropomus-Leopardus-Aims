@@ -545,3 +545,68 @@ runs. Only `table15_cv_block_contributions.csv` and the Step 2 log changed relat
 the previously verified run: `table4`, `table5` and figures 6, 7, 8 and 9 are
 byte-identical to it, confirming the edit touched only the cross-validation block.
 Steps 1, 3, 4 and 5 were not rerun.
+
+---
+
+## Final wording pass, 2026-09-07
+
+Seven corrections from review, all to wording. No R was rerun and no method changed.
+
+**The cross-validated comparison is described for what it actually scores.** It is the
+marginal predictive density of individual site-year counts at unseen sites — marginal
+because the unknown site effect is integrated out rather than estimated. It is
+exploratory throughout.
+
+**Its z is labelled descriptive rather than a formal test.** z = 4.14 is the ratio of a
+cross-validated difference to a clustered standard error, on folds fixed by one seed,
+across five blocks compared with no adjustment for that comparison. It indicates size
+relative to site-to-site variability. No threshold is applied to it and it is not a
+p-value in disguise.
+
+**"Nothing else measurably does" is softened.** Management shows a clear signal in this
+comparison and the other blocks do not, but ten folds over 71 sites cannot distinguish
+"contributes little" from "contributes something this design lacks the resolution to
+detect". The claim is now that only management shows a clear signal here, not that the
+others have been shown to contribute nothing.
+
+**The thermal result is described as suggestive rather than established.** Three things
+stand between it and a firmer reading, and all three are now stated together wherever it
+appears: maxDHW carries 99% of its variance between region-years, so the term rests on
+roughly a dozen contrasts; its worst-case concurvity against the region-specific year
+trends is 0.951, so its coefficient is one possible split of shared variation; and those
+year smooths carry a basis warning that does not clear at k = 6, the maximum the survey
+years allow, so one of the competing terms is itself unresolved.
+
+**Q2's limit is stated precisely.** The claim is now that this design yields no unique,
+assumption-invariant variance share — not that no method could separate management from
+site identity by any route. Any number that appears to separate them rests on an
+assumption the data do not test, and a different, equally defensible assumption gives a
+different number. A design with protection varying within sites, or external information
+on how sites were selected for zoning, would change that.
+
+**The site random-effect block has the largest point estimate, which is all that is
+claimed.** At 9.76 percentage points its bootstrap interval (1.30-12.43) overlaps those
+of environment (1.03-6.51) and the regional year trends (1.13-5.79), so the ordering
+among blocks is not established. H4 is supported in direction, not demonstrated as a
+ranking.
+
+**The exact temporal-correlation p is out of the narrative.** The observed value sits
+toward the extreme of its simulated null without being clearly outside it; the result is
+unresolved and exploratory, and quoting a number from an exploratory diagnostic in
+running text invites reading it as a decision. The value remains in the table as the
+numeric record.
+
+**Two stale descriptions of the CV method are corrected**, one in the Step 2 script and
+the same sentence in the Step 2 log. Both still said the unseen-site random effect was
+set to zero, which the correction above had already replaced with integration.
+
+*A note on how that was done, since it matters for reproducibility.* Step 2 was not
+rerun. The script's say() lines and the corresponding lines of the committed log were
+edited with identical text, so a fresh run of the current script should reproduce the
+current log — but that has not been re-verified by running, because a rerun was excluded.
+The change is prose only: a diff of the log before and against after contains no numeric
+token. Every number in the log remains the output of the two verified runs.
+
+**A duplicated paragraph was removed from the README.** The Design-problems section
+repeated the point about protection changing within none of the 71 sites, which the Q2
+section already makes and makes better.
