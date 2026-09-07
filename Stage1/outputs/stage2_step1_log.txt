@@ -55,10 +55,10 @@ Reported as rate ratios against Fished sites within the same region.
 A ratio of 2 means twice the density. The interval is 95% Wald.
 
       region protection adj_ratio adj_lo adj_hi unadj_ratio unadj_lo unadj_hi
-1       Palm   NTR 1987      1.17   0.83   1.64        1.20     0.86     1.69
-2 Whitsunday   NTR 1987      3.59   2.56   5.04        3.29     2.44     4.44
-3       Palm   NTR 2004      0.96   0.54   1.72        0.91     0.51     1.60
-4 Whitsunday   NTR 2004      3.53   2.46   5.05        3.17     2.29     4.41
+1       Palm   NTR 1987      1.17   0.83   1.64        1.20     0.85     1.70
+2 Whitsunday   NTR 1987      3.59   2.55   5.06        3.29     2.43     4.45
+3       Palm   NTR 2004      0.96   0.53   1.73        0.91     0.51     1.61
+4 Whitsunday   NTR 2004      3.53   2.46   5.07        3.17     2.28     4.42
 
 adj   = adjusted for wave exposure (model 1)
 unadj = not adjusted for exposure   (model 2)
@@ -103,3 +103,7 @@ CHANGED the habitat, habitat is a mediator and adjusting for it would remove
 part of the effect being measured. For coral trout over this period the first
 is far more plausible, so Step 2 adjusts. Recorded here so the choice is not
 revisited after seeing which way the coefficient moves.
+
+----------------------------------------------------------------------
+environment: R version 4.3.3 (2024-02-29) | mgcv 1.9.1 | platform x86_64-pc-linux-gnu
+----------------------------------------------------------------------

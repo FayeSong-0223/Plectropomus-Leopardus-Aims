@@ -109,11 +109,168 @@ site-constant covariate is fully aliased with the site random effect, and the
 concurvity check above returned exactly 1.000 for it before this change.
 
         specification    AIC dev_expl            W1987            W2004
-1   depth as a smooth 2353.1    60.2% 3.21 (2.28-4.52) 2.89 (1.99-4.19)
-2 depth linear (used) 2353.0    60.2% 3.21 (2.28-4.52) 2.89 (1.99-4.19)
-3       depth omitted 2354.1    59.3% 3.62 (2.62-4.99) 3.34 (2.38-4.68)
+1   depth as a smooth 2353.1    60.2% 3.21 (2.25-4.58) 2.89 (1.97-4.24)
+2 depth linear (used) 2353.0    60.2% 3.21 (2.25-4.58) 2.89 (1.97-4.23)
+3       depth omitted 2354.1    59.3% 3.62 (2.59-5.04) 3.34 (2.36-4.72)
 
 The smooth and the linear term give identical estimates, because the smooth had
 already collapsed to a straight line (edf 1.005). Omitting depth raises the
 Whitsunday estimate, so depth is doing real adjustment work and should be kept.
 The linear form keeps that adjustment without the aliasing.
+
+======================================================================
+5. ZERO COUNTS AGAINST WHAT THE MODEL PREDICTS
+======================================================================
+Section 8 of the project plan flagged that Palm's zeros are concentrated, and
+no distributional check was ever run against that. The negative binomial can
+accommodate a good deal of excess zero mass through its overdispersion, but
+whether it accommodates THIS much is a question with an answer.
+
+The test is a parametric bootstrap. Each replicate draws a new dataset from the
+fitted model — same covariates, same fitted means, same theta — counts its
+zeros, and the observed count is compared against that reference distribution.
+An analytic expected value alone would not do: it gives a point to compare
+against with no sense of how far a correct model would ordinarily stray.
+
+observed zeros: 52 of 467 observations
+simulated under the fitted model: median 35, 95% interval 25 to 46
+one-sided p (simulated >= observed): 0.0040
+-> the model generates fewer zeros than observed. Excess zero mass is real.
+
+The same comparison across the low counts, where zero inflation would show up
+as a zero excess paired with a deficit at one and two:
+
+  count observed sim_median lo     hi
+1     0       52         35 27 47.000
+2     1       47         56 44 69.000
+3     2       57         59 46 73.525
+4     3       38         53 41 67.000
+5     4       42         45 34 57.000
+6     5       27         37 26 47.000
+
+By region, since the plan's concern was specifically about Palm:
+      region   n observed sim_median     lo hi      p
+1       Palm 180       31         20 12.975 28 0.0090
+2 Whitsunday 287       21         15  8.000 22 0.0619
+
+What this changes. A zero excess inflates the apparent overdispersion, which
+widens intervals rather than narrowing them, so it does not manufacture the
+protection result. The check below confirms that directly.
+sites where at least 4 of 7 surveys are zero: 1 (holding 8% of all zeros)
+  protection             full     zero_trimmed
+1   NTR 1987 3.21 (2.25-4.58) 3.27 (2.31-4.63)
+2   NTR 2004 2.89 (1.97-4.23) 2.89 (1.98-4.22)
+
+======================================================================
+6. TEMPORAL AUTOCORRELATION WITHIN SITES
+======================================================================
+The model gives each site a random intercept, which absorbs a site's persistent
+level. It does not model correlation between successive visits to the same site
+beyond that, and nothing in this project had tested whether it needs to.
+
+Survey years are unequally spaced — 2007, 2009, 2012, 2014, 2016, 2017, 2018 —
+so pairing consecutive SURVEYS would mix a one-year gap with a three-year gap
+and call both 'lag 1'. Pairs are therefore binned by the actual number of years
+between them.
+
+   gap_years n_pairs      r     lo     hi      p
+1          1      82  0.046 -0.173  0.260 0.6845
+2          2     284 -0.028 -0.144  0.088 0.6325
+3          3     112 -0.376 -0.525 -0.205 0.0000
+4          4     142 -0.090 -0.251  0.075 0.2844
+5          5     183 -0.085 -0.227  0.061 0.2519
+6          6      71 -0.194 -0.409  0.041 0.1047
+7          7     142 -0.128 -0.287  0.037 0.1277
+8          8      41  0.069 -0.244  0.369 0.6694
+9          9     142 -0.028 -0.192  0.137 0.7399
+10        10      41  0.126 -0.189  0.418 0.4309
+11        11      71 -0.087 -0.314  0.149 0.4706
+
+One caution before reading that table. A site random intercept forces a site's
+residuals to sum to roughly zero, which induces a negative correlation of about
+-1/(m-1) at every gap, with m the surveys per site. Here m = 6.58, so about -0.179 is the baseline to judge
+against, not zero. Most gaps sit at or above it. One does not.
+
+Because randomised quantile residuals depend on the seed, the strongest gap —
+3 years — is re-tested across 20 randomisations, as every other residual
+diagnostic here is:
+
+gap of 3 years: r ranges -0.399 to -0.326, median -0.367, p < 0.05 in 20 of 20 randomisations
+-> this is not a seed artefact and it is stronger than the induced baseline.
+
+Which survey pairs carry it:
+
+                        n_sites      r      p
+Palm 2009 to 2012            30 -0.397 0.0298
+Whitsunday 2009 to 2012      41 -0.501 0.0008
+Whitsunday 2014 to 2017      41 -0.228 0.1508
+
+What it means. A negative correlation is a reversal: sites sitting above their
+predicted density at the first survey sat below it at the second, and the other
+way round. Something between those two surveys moved sites differentially, and
+the model does not have a term for it. The region-specific year trend cannot
+supply one — it shifts every site in a region by the same amount.
+
+This is the cyclone limitation made concrete rather than merely stated. Cyclone
+exposure is recorded at survey points only, so any disturbance falling in the
+gap between two surveys is invisible to the covariate, and the gap concerned
+here is a three-year one. Attributing it to a particular storm would be
+inference beyond this dataset; what the data support is that the gap contains
+an unmodelled, site-differentiating event. It belongs in the limitations and in
+the list of questions for anyone who holds the track data.
+
+======================================================================
+7. MULTIPLICITY WITHIN HYPOTHESIS FAMILIES
+======================================================================
+Model A reports 17 tests. None of the p-values quoted anywhere in this project
+had been adjusted for that, which matters most for the terms that are already
+marginal.
+
+A single correction across all 17 would be the wrong instrument. The plan set
+out four hypotheses in advance, and a test only competes with the others asked
+in service of the same hypothesis. Holm's correction is applied within each
+family. It controls the family-wise error rate, needs no independence
+assumption — which matters here, since concurvity between these terms is high —
+and is uniformly at least as powerful as Bonferroni.
+
+              family              term      p p_holm survives
+1   H1/Q3 management          NTR 1987 0.2099 0.4198    FALSE
+2   H1/Q3 management          NTR 2004 0.8629 0.8629    FALSE
+3   H1/Q3 management REGION x NTR 1987 0.0004 0.0014     TRUE
+4   H1/Q3 management REGION x NTR 2004 0.0007 0.0020     TRUE
+5         H2 habitat       s(rugosity) 0.0971 0.2912    FALSE
+6         H2 habitat            s(LHC) 0.3748 0.3748    FALSE
+7         H2 habitat             depth 0.0991 0.2912    FALSE
+8     H3 environment         s(maxDHW) 0.0000 0.0000     TRUE
+9     H3 environment          s(kd490) 0.0136 0.0272     TRUE
+10    H3 environment        s(Cyclone) 0.0776 0.0776    FALSE
+11 H4 site variation           s(SITE) 0.0000 0.0000     TRUE
+
+The result that matters survives comfortably. Q3 is the region-by-protection
+interaction, and both its terms clear Holm within the management family by an
+order of magnitude. The NTR main effects do not, but those are the Palm
+estimates, which were already null — a null that fails a correction for
+multiplicity is still a null.
+
+Nothing in the habitat family survives, which agrees with the within-between
+split in Step 4.
+
+The environment family is where the two corrections part company. The thermal
+term survives both Holm and the unconditional interval. Cyclone exposure
+survives neither. Turbidity survives Holm but its magnitude interval includes
+1 once smoothing-parameter uncertainty is admitted, so it should be reported as
+unresolved rather than as an effect — the weaker of two readings is the one to
+quote when they disagree.
+
+The year-trend smooths are not in any family. They are adjustment terms rather
+than hypotheses, and correcting a hypothesis test for the significance of a
+nuisance term would be a category error.
+
+======================================================================
+8. FIGURE
+======================================================================
+wrote fig16_distribution_and_time.png
+
+----------------------------------------------------------------------
+environment: R version 4.3.3 (2024-02-29) | mgcv 1.9.1 | platform x86_64-pc-linux-gnu
+----------------------------------------------------------------------

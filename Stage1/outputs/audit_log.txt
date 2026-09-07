@@ -149,3 +149,7 @@ wrote fig3_habitat_disturbance.png
            84
            63
 wrote table1_design_summary.csv, table2_covariate_variance_structure.csv, analysis_dataset.csv
+
+----------------------------------------------------------------------
+environment: R version 4.3.3 (2024-02-29) | mgcv 1.9.1 | platform x86_64-pc-linux-gnu
+----------------------------------------------------------------------

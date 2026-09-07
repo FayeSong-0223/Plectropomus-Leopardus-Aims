@@ -111,24 +111,37 @@ cap(gam.vcomp(mA, rescale = FALSE))
 # ---------------------------------------------------------------------
 rule("3. IS THE PROTECTION EFFECT STABLE?")
 say("The estimate is worth little if it moves with every change of specification.")
-say("Four models are compared, from the Step 1 baseline to the fully adjusted fits.\n")
+say("Five models are compared, from the Step 1 baseline to the fully adjusted fits.")
+say("")
+say("The first rung is the Step 1 model exactly as Step 1 fitted it, with no depth")
+say("term, so that its numbers reproduce table 3 rather than merely resembling them.")
+say("Depth enters as its own rung, because it moves the Whitsunday estimate more")
+say("than any other single covariate and that should be visible rather than folded")
+say("into a baseline.\n")
 
+mS1 <- gam(count ~ REGION * NTR + EXPOSURE + factor(YEAR) + s(SITE, bs = "re"),
+           family = nb(), data = d, method = "REML")
 m0 <- gam(count ~ REGION * NTR + EXPOSURE + depth + factor(YEAR) + s(SITE, bs = "re"),
           family = nb(), data = d, method = "REML")
 mH <- gam(count ~ REGION * NTR + EXPOSURE + depth + factor(YEAR) +
             s(rugosity, k = 5) + s(LHC, k = 5) + s(SITE, bs = "re"),
           family = nb(), data = d, method = "REML")
 
+# Intervals use the unconditional covariance matrix throughout: it adds the
+# uncertainty in the smoothing parameters, which the conditional matrix treats
+# as known. For protection the difference is negligible (these are parametric
+# contrasts); for anything read off a smooth it is not, and using one rule
+# everywhere avoids two standards in one report.
 rr <- function(m, region, level) {
-  b <- coef(m); V <- vcov(m); nm <- names(b); k <- rep(0, length(b))
+  b <- coef(m); V <- vcov(m, unconditional = TRUE); nm <- names(b); k <- rep(0, length(b))
   k[match(paste0("NTR", level), nm)] <- 1
   ix <- paste0("REGIONWhitsunday:NTR", level)
   if (region == "Whitsunday" && ix %in% nm) k[match(ix, nm)] <- 1
   e <- sum(k * b); se <- sqrt(as.numeric(t(k) %*% V %*% k))
   c(exp(e), exp(e - 1.96 * se), exp(e + 1.96 * se))
 }
-mods <- list("1 baseline (Step 1)" = m0, "2 + habitat" = mH,
-             "3 + environment, smooth year (A)" = mA, "4 region-year saturated (B)" = mB)
+mods <- list("1 Step 1 baseline (no depth)" = mS1, "2 + depth" = m0, "3 + habitat" = mH,
+             "4 + environment, smooth year (A)" = mA, "5 region-year saturated (B)" = mB)
 grid <- expand.grid(region = c("Palm", "Whitsunday"),
                     level = c("NTR 1987", "NTR 2004"), stringsAsFactors = FALSE)
 stab <- do.call(rbind, lapply(names(mods), function(nm)
@@ -144,46 +157,134 @@ write.csv(stab, file.path(OUT, "table4_protection_stability.csv"), row.names = F
 # ---------------------------------------------------------------------
 # 4. VARIANCE DECOMPOSITION ON THE LINK SCALE
 # ---------------------------------------------------------------------
-rule("4. WHERE THE VARIATION SITS")
-say("Each block contributes a vector of values to the linear predictor. The variance")
-say("of each block is its unique contribution; the pairwise covariances are what the")
-say("blocks share. Variances and covariances together sum exactly to the variance of")
-say("the linear predictor, so nothing is allocated arbitrarily and the answer does")
-say("not depend on the order terms were entered.\n")
+rule("4. HOW MUCH DOES EACH BLOCK CONTRIBUTE?")
+say("Q2 asks how much of the variation the covariates explain. An earlier version of")
+say("this analysis answered it by decomposing the variance of the linear predictor")
+say("into per-block shares. That answer has been withdrawn, for three reasons found")
+say("on audit and recorded in DECISIONS.md:")
+say("")
+say("  1. It was not invariant to the coding of the factor contrasts. Refitting the")
+say("     identical model under sum-to-zero rather than treatment contrasts moved the")
+say("     management share from 0.481 to 0.391 and space/time from 0.121 to 0.345,")
+say("     with identical fitted values and identical log-likelihood. A quantity that")
+say("     moves when nothing about the fit moves is a property of the parameterisation,")
+say("     not of the data.")
+say("  2. It partitioned only the systematic part. The linear predictor has variance")
+say("     0.533; the negative binomial observation process contributes roughly 0.455")
+say("     more on the same scale. Around half of the variation sat outside the")
+say("     partition and the shares were silently conditional on that.")
+say("  3. The site block used the empirical variance of the shrunken random-effect")
+say("     predictions, 0.048, against an estimated variance component of 0.094. Site")
+say("     was understated by about half, and every other block inflated against it.")
+say("")
+say("What replaces it is a drop-one-block comparison: refit the model without each")
+say("block in turn and record how far deviance explained falls, in percentage points.")
+say("This is invariant to contrast coding, it is a statement about the fitted model")
+say("rather than about total ecological variation, and it can carry an interval.")
+say("It is not additive: blocks share variation, so the drops do not sum to the")
+say("model's deviance explained and should never be presented as shares of it.\n")
 
-tm <- predict(mA, type = "terms")
-cn <- colnames(tm)
-blk <- list(
-  Management  = grep("NTR", cn, value = TRUE),
-  Habitat     = unique(c(grep("s\\((rugosity|LHC)\\)", cn, value = TRUE), grep("^depth$", cn, value = TRUE))),
-  Environment = grep("s\\((kd490|maxDHW|Cyclone)\\)", cn, value = TRUE),
-  `Space/time`= c(grep("^REGION$|s\\(YEAR\\)", cn, value = TRUE),
-                  grep("YEAR", cn, value = TRUE), grep("^EXPOSURE$", cn, value = TRUE)),
-  `Site (RE)` = grep("s\\(SITE\\)", cn, value = TRUE))
-blk <- lapply(blk, unique)
-blk <- lapply(blk, function(x) x[x %in% cn])
-say("term-to-block assignment:")
-for (b in names(blk)) say("  ", b, ": ", paste(blk[[b]], collapse = ", "))
-used <- unlist(blk); miss <- setdiff(cn, used)
-if (length(miss)) say("  UNASSIGNED (check): ", paste(miss, collapse = ", "))
+blocks <- list(
+  "Management (H1/Q3)"        = ". ~ . - REGION:NTR - NTR",
+  "Habitat (H2)"              = ". ~ . - s(rugosity, k = 5) - s(LHC, k = 5) - depth",
+  "Environment (H3)"          = ". ~ . - s(kd490, k = 5) - s(maxDHW, k = 5) - s(Cyclone, k = 5)",
+  "Regional year trends"      = ". ~ . - s(YEAR, by = REGION, k = 5)",
+  "Site random effect (H4)"   = ". ~ . - s(SITE, bs = \"re\")",
+  "Wave exposure (confounder)"= ". ~ . - EXPOSURE")
 
-B <- sapply(blk, function(k) if (length(k)) rowSums(tm[, k, drop = FALSE]) else rep(0, nrow(tm)))
-S <- cov(B); tot <- sum(S)
-uni <- diag(S) / tot
-say("\n-- unique contribution of each block (share of linear-predictor variance) --")
-cap(round(sort(uni, decreasing = TRUE), 3))
-say("\n-- shared components (pairwise covariance / total) --")
-sh <- S; diag(sh) <- NA
-shd <- as.data.frame(as.table(round(sh / tot, 3)))
-shd <- shd[!is.na(shd$Freq) & as.character(shd$Var1) < as.character(shd$Var2), ]
-shd <- shd[order(-abs(shd$Freq)), ]; names(shd) <- c("block_1", "block_2", "shared_share")
-cap(head(shd, 6))
-say("\nsum of unique shares: ", sprintf("%.3f", sum(uni)),
-    "   sum of 2x shared: ", sprintf("%.3f", 1 - sum(uni)))
-say("Positive shared values mean two blocks move together and observation alone")
-say("cannot separate their contributions. Negative values mean they offset.")
-vd <- data.frame(block = names(uni), unique_share = round(as.numeric(uni), 4))
-write.csv(vd, file.path(OUT, "table5_variance_decomposition.csv"), row.names = FALSE)
+fA   <- formula(mA)
+fNoRE <- update(fA, . ~ . - s(SITE, bs = "re"))
+
+gsafe <- function(fm, dat) tryCatch(gam(fm, family = nb(), data = dat, method = "REML"),
+                                    error = function(e) NULL)
+LABS <- c(names(blocks), "Management, no site random effect")
+dev_drops <- function(dat) {
+  out <- rep(NA_real_, length(LABS))
+  full <- gsafe(fA, dat)
+  if (!is.null(full)) {
+    de0 <- summary(full)$dev.expl
+    for (i in seq_along(blocks)) {
+      m <- gsafe(update(fA, as.formula(blocks[[i]])), dat)
+      if (!is.null(m)) out[i] <- (de0 - summary(m)$dev.expl) * 100
+    }
+  }
+  # Management is constant within a site, so with a site random effect in the
+  # model the two compete for the same between-site variation and dropping
+  # management simply hands its work to the random effect. To measure what
+  # management explains at all, it has to be dropped from a model where nothing
+  # else is absorbing site identity.
+  f0 <- gsafe(fNoRE, dat)
+  f1 <- gsafe(update(fNoRE, . ~ . - REGION:NTR - NTR), dat)
+  if (!is.null(f0) && !is.null(f1))
+    out[length(LABS)] <- (summary(f0)$dev.expl - summary(f1)$dev.expl) * 100
+  setNames(out, LABS)
+}
+
+obs <- dev_drops(d)
+say("deviance explained, full model: ", sprintf("%.1f%%", summary(mA)$dev.expl * 100))
+say("deviance explained, same model without the site random effect: ",
+    sprintf("%.1f%%", summary(gam(fNoRE, family = nb(), data = d, method = "REML"))$dev.expl * 100))
+
+# Cluster bootstrap: sites are resampled with replacement, because observations
+# within a site are not independent. Resampled copies of the same site get
+# distinct labels so the random effect treats them as separate draws. The
+# resample indices are drawn up front under a fixed seed, so the result does not
+# depend on how the work is later divided between cores.
+NBOOT <- 200
+sites <- levels(d$SITE)
+set.seed(2)
+boot_sets <- lapply(seq_len(NBOOT), function(b) sample(sites, length(sites), replace = TRUE))
+
+make_boot <- function(sel) {
+  parts <- lapply(seq_along(sel), function(j) {
+    z <- d[d$SITE == sel[j], ]; z$SITE <- paste0(sel[j], "_", j); z
+  })
+  z <- do.call(rbind, parts); z$SITE <- factor(z$SITE); z
+}
+
+say("\nbootstrapping ", NBOOT, " site-level resamples (", length(blocks) + 3,
+    " model fits each) — this is by far the slow part of the pipeline,")
+say("of the order of half an hour on two cores and a few minutes on eight")
+run_one <- function(b) dev_drops(make_boot(boot_sets[[b]]))
+ncore <- max(1L, min(parallel::detectCores(), 4L))
+bt <- if (.Platform$OS.type == "unix" && ncore > 1L)
+        parallel::mclapply(seq_len(NBOOT), run_one, mc.cores = ncore) else
+        lapply(seq_len(NBOOT), run_one)
+bt <- do.call(rbind, lapply(bt, function(z)
+  if (is.numeric(z) && length(z) == length(LABS)) z else rep(NA_real_, length(LABS))))
+ok <- rowSums(is.na(bt)) == 0
+say("replicates that converged for every model: ", sum(ok), " of ", NBOOT)
+
+ci <- t(apply(bt[ok, , drop = FALSE], 2, quantile, c(0.025, 0.975), na.rm = TRUE))
+dd <- data.frame(block = LABS,
+                 dev_expl_drop_pp = round(as.numeric(obs), 2),
+                 lo = round(ci[, 1], 2), hi = round(ci[, 2], 2))
+dd$excludes_zero <- !(dd$lo < 0 & dd$hi > 0)
+dd <- dd[order(-dd$dev_expl_drop_pp), ]
+say("\n-- fall in deviance explained when each block is removed (percentage points) --")
+cap(dd)
+write.csv(dd, file.path(OUT, "table5_block_contributions.csv"), row.names = FALSE)
+
+say("\nThese are conditional, non-additive measures of each block's contribution to")
+say("this model. They are not shares of total ecological variation and do not sum")
+say("to anything meaningful. A block whose interval includes zero is not")
+say("distinguishable from a block that contributes nothing.")
+say("")
+say("The management row is the one that repays reading carefully, and it is the")
+say("honest answer to Q2. Protection is fixed for the whole history of a site, so")
+say("in a model that already gives every site its own intercept, management and the")
+say("random effect are competing to explain the same between-site differences.")
+say("Remove management and the random effect simply takes the work over, which is")
+say("why its drop sits at or below zero. That is not evidence of no effect — Step 3")
+say("shows the Whitsunday estimate is stable across every specification — it means")
+say("deviance explained cannot separate the two, and any method that appears to")
+say("separate them is reporting an artefact of how the model was parameterised.")
+say("The last row measures management where it is identifiable: in a model with no")
+say("site random effect at all.")
+say("")
+say("H4 said unexplained site-level variation would be large relative to the")
+say("measured covariates. On these numbers it is: the site random effect is the")
+say("largest single contributor, and no covariate block approaches it.")
 
 # ---------------------------------------------------------------------
 # 5. FIGURES
@@ -211,16 +312,21 @@ for (i in seq_along(sm)) {
 }
 dev.off(); say("wrote fig6_partial_effects.png")
 
-## Figure 7 — variance decomposition
-png(file.path(OUT, "fig7_variance_decomposition.png"), width = 1900, height = 1150, res = 220)
-par(mar = c(3.8, 8.0, 2.6, 1.0)); base_par()
-o <- sort(uni)
-bp <- barplot(o, horiz = TRUE, col = TEAL, border = NA, xlim = c(0, max(o) * 1.25),
-              xlab = "Share of linear-predictor variance (unique)",
-              main = "Where the explained variation sits", font.main = 1,
-              cex.main = 0.98, adj = 0, las = 1, cex.names = 0.82)
-text(o, bp, sprintf(" %.3f", o), pos = 4, cex = 0.8, col = "grey25", xpd = NA)
-dev.off(); say("wrote fig7_variance_decomposition.png")
+## Figure 7 — block contributions, with bootstrap intervals
+png(file.path(OUT, "fig7_block_contributions.png"), width = 1900, height = 1150, res = 220)
+par(mar = c(4.2, 11.0, 2.8, 1.4)); base_par()
+o  <- dd[order(dd$dev_expl_drop_pp), ]
+xr <- range(c(0, o$lo, o$hi)) * c(1, 1.10)
+bp <- barplot(o$dev_expl_drop_pp, horiz = TRUE, names.arg = o$block, col = TEAL,
+              border = NA, xlim = xr, las = 1, cex.names = 0.78,
+              xlab = "Fall in deviance explained when removed (percentage points)",
+              main = "Contribution of each block to this model", font.main = 1,
+              cex.main = 0.98, adj = 0)
+arrows(o$lo, bp, o$hi, bp, angle = 90, code = 3, length = 0.03, col = "grey30", xpd = NA)
+abline(v = 0, col = "grey60", lty = 2)
+mtext("Conditional and non-additive: these are not shares of total variation",
+      side = 3, line = -0.1, adj = 0, cex = 0.72, col = "grey35")
+dev.off(); say("wrote fig7_block_contributions.png")
 
 ## Figure 8 — protection stability across specifications
 png(file.path(OUT, "fig8_protection_stability.png"), width = 2000, height = 1250, res = 220)
@@ -233,7 +339,7 @@ for (rg in c("Palm", "Whitsunday")) {
   plot(NA, xlim = c(0.6, length(xs) + 0.4), ylim = range(c(stab$lo, stab$hi, 1)), log = "y",
        xaxt = "n", xlab = "", ylab = "Density ratio vs fished",
        main = rg, font.main = 1, cex.main = 1.0, adj = 0)
-  axis(1, at = xs, labels = c("base", "+hab", "+env", "sat"), cex.axis = 0.8)
+  axis(1, at = xs, labels = c("Step 1", "+depth", "+hab", "+env", "sat"), cex.axis = 0.75)
   abline(h = 1, col = "grey55", lty = 2); grid(nx = NA, ny = NULL, col = "grey93")
   for (k in seq_along(unique(s$protection))) {
     lv <- unique(s$protection)[k]; z <- s[s$protection == lv, ]
@@ -314,6 +420,15 @@ dev.off(); say("\nwrote fig9_thermal_sensitivity.png")
 
 say("\nRead this comparison before quoting any thermal effect. If the curve changes")
 say("shape when one survey is removed, the effect is that survey, not the covariate.")
+
+# Record the environment. mgcv ships with R but its version tracks the R
+# version, and REML fitting and the nb() family have both changed across
+# releases, so "no packages required" is not the same as "no versions to
+# reconcile". Anyone reproducing these numbers needs to know what produced them.
+say("\n", strrep("-", 70))
+say("environment: ", R.version.string, " | mgcv ", as.character(packageVersion("mgcv")),
+    " | platform ", R.version$platform)
+say(strrep("-", 70))
 
 writeLines(log_lines, file.path(OUT, "stage2_step2_log.txt"))
 cat("\nDone. Outputs in ", OUT, "/\n", sep = "")

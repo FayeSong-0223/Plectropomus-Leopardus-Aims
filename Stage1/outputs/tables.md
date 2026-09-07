@@ -51,38 +51,66 @@ mixed model with a site random intercept. 95% Wald intervals.
 Adjusting for wave exposure does not explain the regional difference. If anything
 the Whitsunday estimates increase slightly once exposure is accounted for.
 
-## Table 4 — Protection effect across four specifications (Step 2)
+## Table 4 — Protection effect across five specifications (Step 2)
 
-Density ratio against fished sites in the same region, 95% Wald intervals.
-`base` = Step 1; `+hab` adds habitat; `+env` is Model A; `sat` is Model B.
+Density ratio against fished sites in the same region, 95% intervals on the
+unconditional covariance matrix. The first rung is the Step 1 model exactly as
+Step 1 fits it, so it reproduces table 3 rather than merely resembling it; depth
+then enters as its own rung.
 
-| Region | Protection | base | +hab | +env (A) | sat (B) |
-|---|---|---|---|---|---|
-| Palm | NTR 1987 | 1.17 | 1.29 | 1.26 | 1.27 |
-| Palm | NTR 2004 | 0.96 | 1.18 | 0.95 | 0.95 |
-| Whitsunday | NTR 1987 | 3.59 | 3.12 | 3.21 | 3.23 |
-| Whitsunday | NTR 2004 | 3.53 | 2.81 | 2.89 | 2.90 |
+| Region | Protection | Step 1 | + depth | + hab | + env (A) | sat (B) |
+|---|---|---|---|---|---|---|
+| Palm | NTR 1987 | 1.17 | 1.20 | 1.29 | 1.26 | 1.27 |
+| Palm | NTR 2004 | 0.96 | 0.97 | 1.18 | 0.95 | 0.95 |
+| Whitsunday | NTR 1987 | 3.59 | 3.16 | 3.12 | 3.21 | 3.23 |
+| Whitsunday | NTR 2004 | 3.53 | 2.95 | 2.81 | 2.89 | 2.90 |
 
 Every Palm interval spans 1 in every specification. Every Whitsunday interval
-excludes 1 in every specification. Adding habitat lowers the Whitsunday estimates
-by 10–20%, after which they are stable.
+excludes 1 in every specification.
 
-## Table 5 — Variance decomposition on the link scale (Model A)
+Depth is the single covariate that moves the estimate most — Whitsunday NTR 1987
+falls from 3.59 to 3.16 when it enters. An earlier version of this table folded
+depth into a rung labelled "baseline (Step 1)", which put two different numbers,
+3.59 and 3.16, under the same name in tables 3 and 4. Separating the rungs fixes
+that and makes depth's adjustment visible.
 
-Unique share of linear-predictor variance.
+## Table 5 — Block contributions (Step 2)
 
-| Block | Unique share |
-|---|---:|
-| Management | 0.481 |
-| Space/time | 0.121 |
-| Environment | 0.109 |
-| Site (random effect) | 0.089 |
-| Habitat | 0.047 |
+**Table 5 replaces a withdrawn variance decomposition.** The earlier version
+reported per-block shares of linear-predictor variance, with management at 0.481.
+That quantity was not invariant to contrast coding — refitting the identical model
+under sum-to-zero moved management to 0.391 and space/time from 0.121 to 0.345,
+with identical fitted values and log-likelihood. See `DECISIONS.md` for the two
+further faults.
 
-Unique shares sum to 0.847; the remaining 0.153 is shared between blocks. The
-largest shared component is Environment with Space/time (0.038), which is the
-expected consequence of thermal covariates and year both varying at region-year
-level.
+What follows instead: each block is dropped, the model refitted, and the fall in
+deviance explained recorded in percentage points. 95% intervals from 200
+site-level cluster bootstrap resamples. Deviance explained is 60.2% for the full
+model and 48.9% without the site random effect.
+
+| Block | Drop (pp) | 95% interval | Excludes 0 |
+|---|---:|---|---|
+| Management, no site random effect | 14.09 | 6.53 – 18.75 | yes |
+| Site random effect (H4) | 11.27 | 0.24 – 15.08 | yes |
+| Environment (H3) | 4.78 | 2.11 – 9.44 | yes |
+| Regional year trends | 4.30 | 1.43 – 8.35 | yes |
+| Habitat (H2) | 0.42 | −0.87 – 3.08 | no |
+| Wave exposure (confounder) | 0.28 | −0.65 – 1.31 | no |
+| Management (H1/Q3) | −1.02 | −4.46 – −0.12 | yes |
+
+These are conditional and non-additive. They do not sum to anything and are not
+shares of total variation.
+
+The management rows are the point. Protection is fixed for a site's whole
+history, so within a model that already gives every site its own intercept the
+two compete for the same between-site variation: remove management and the random
+effect takes the work over, which is why its drop sits slightly below zero. That
+is not evidence of no effect — table 7 shows the Whitsunday estimate stable across
+every specification — it means deviance explained cannot separate them. The first
+row measures management where it is identifiable, with no random effect present.
+
+H4 expected unexplained site-level variation to be large relative to the measured
+covariates. It is: no covariate block approaches the site random effect.
 
 ## Table 6 — Influence: leave one region-year out (Step 3)
 
@@ -112,9 +140,16 @@ Density ratio against fished sites, 95% intervals.
 | Whitsunday | NTR 1987 | 3.21 (2.28–4.52) | 2.58 (1.56–4.25) | 2.73 (1.84–4.05) | 2.98 (2.10–4.25) | 3.24 (2.33–4.50) |
 | Whitsunday | NTR 2004 | 2.89 (1.99–4.19) | 1.87 (1.11–3.16) | 2.49 (1.63–3.83) | 2.70 (1.84–3.96) | 2.86 (2.00–4.08) |
 
-Every Whitsunday estimate excludes 1 in every specification. The Palm sheltered-only
-estimate for NTR 1987 is the one reversal in the whole set and rests on 6 fished and
-5 reserve sites; it is reported, not explained.
+Every Whitsunday estimate excludes 1 in every specification.
+
+The Palm sheltered-only estimate for NTR 1987 is the one reversal in the set. It rests
+on 6 fished and 5 reserve sites. Section 10 of the project plan set the rule for this
+check before any of it was run: the restriction tests the same thing as the adjustment
+without assuming the functional form is right, so *"if it agrees with the adjusted
+estimate, say so. If it does not, distrust the adjusted one."* It does not agree.
+Applying that rule, Palm is **unresolved, not null** — which is not the same as a
+protection effect in the opposite direction, since eleven sites cannot distinguish a
+real local difference from noise.
 
 ## Sheltered stratum composition
 
@@ -151,17 +186,25 @@ Selection was made in advance, not by any automatic procedure.
 ## Table 8 — Effect magnitude across the observed range (Step 4)
 
 Each covariate moved from its 10th to its 90th percentile, everything else held fixed.
+Intervals use the **unconditional** covariance matrix, which admits the uncertainty in
+the smoothing parameters. The conditional intervals the earlier version quoted are shown
+alongside, because three conclusions turn on the difference.
 
-| Covariate | 10th | 90th | Ratio (95% CI) | Change |
-|---|---:|---:|---|---:|
-| Rugosity index | 2.44 | 4.34 | 1.27 (1.04–1.54) | +27% |
-| Live hard coral (%) | 10.2 | 50.0 | 1.03 (0.81–1.32) | +3% |
-| Depth (m) | 3.94 | 6.97 | 1.33 (0.95–1.88) | +33% |
-| kd490 (turbidity) | 0.057 | 0.084 | 0.75 (0.57–0.97) | −25% |
-| Max degree heating weeks | 0.00 | 3.38 | 0.68 (0.53–0.87) | −32% |
-| Cyclone exposure index | 0.00 | 2.54 | 0.85 (0.72–0.99) | −16% |
-| *Whitsunday NTR 1987 vs fished* | — | — | 3.21 (2.28–4.52) | +221% |
-| *Whitsunday NTR 2004 vs fished* | — | — | 2.89 (1.99–4.19) | +189% |
+| Covariate | 10th | 90th | Ratio | Unconditional CI | Conditional CI (old) | Change |
+|---|---:|---:|---:|---|---|---:|
+| Rugosity index | 2.44 | 4.34 | 1.27 | 0.98–1.64 | 1.04–1.54 | +27% |
+| Live hard coral (%) | 10.2 | 50.0 | 1.03 | 0.79–1.34 | 0.81–1.32 | +3% |
+| Depth (m) | 3.94 | 6.97 | 1.33 | 0.94–1.89 | 0.95–1.88 | +33% |
+| kd490 (turbidity) | 0.057 | 0.084 | 0.75 | 0.55–1.01 | 0.57–0.97 | −25% |
+| Max degree heating weeks | 0.00 | 3.38 | 0.68 | **0.48–0.96** | 0.53–0.87 | −32% |
+| Cyclone exposure index | 0.00 | 2.54 | 0.85 | 0.67–1.06 | 0.72–0.99 | −16% |
+| *Whitsunday NTR 1987 vs fished* | — | — | 3.21 | **2.25–4.58** | 2.28–4.52 | +221% |
+| *Whitsunday NTR 2004 vs fished* | — | — | 2.89 | **1.97–4.23** | 1.99–4.19 | +189% |
+
+Rugosity, turbidity and cyclone exposure all stop excluding 1. Only the thermal term
+still does. The standard errors inflate by 33–42% for the terms read off a smooth and
+by about 1% for the parametric protection contrasts, which is why the headline result
+is untouched.
 
 The thermal contrast spans 0–3.4 DHW, the identified part of the curve, avoiding the
 boundary artefact at the high end.
@@ -239,3 +282,80 @@ The pooled coefficient conflates two claims. Q4 asks the within-site one.
 Neither rugosity component is distinguishable from 1. The pooled rugosity estimate in
 Table 8 excluded 1 only because it averaged two weakly-estimated components. **Q4's
 answer is "neither"** — not structural complexity, not live coral cover.
+
+## Table 13 — Temporal autocorrelation within sites (Step 5)
+
+Residual pairs within a site, binned by the true number of years between the two
+surveys. The survey years are unequally spaced (2007, 2009, 2012, 2014, 2016, 2017,
+2018), so pairing consecutive *surveys* would call a one-year gap and a three-year gap
+the same thing.
+
+| Gap (years) | Pairs | r | 95% CI | p |
+|---:|---:|---:|---|---:|
+| 1 | 82 | 0.046 | −0.173 – 0.260 | 0.685 |
+| 2 | 284 | −0.028 | −0.144 – 0.088 | 0.633 |
+| **3** | **112** | **−0.376** | **−0.525 – −0.205** | **<0.0001** |
+| 4 | 142 | −0.090 | −0.251 – 0.075 | 0.284 |
+| 5 | 183 | −0.085 | −0.227 – 0.061 | 0.252 |
+| 6 | 71 | −0.194 | −0.409 – 0.041 | 0.105 |
+| 7 | 142 | −0.128 | −0.287 – 0.037 | 0.128 |
+| 8 | 41 | 0.069 | −0.244 – 0.369 | 0.669 |
+| 9 | 142 | −0.028 | −0.192 – 0.137 | 0.740 |
+| 10 | 41 | 0.126 | −0.189 – 0.418 | 0.431 |
+| 11 | 71 | −0.087 | −0.314 – 0.149 | 0.471 |
+
+A site random intercept forces a site's residuals to sum to roughly zero, which induces
+a negative correlation of about −1/(m−1) at every gap. Here m = 6.58, so **−0.18** is
+the baseline to judge against, not zero. Ten of eleven gaps sit at or above it.
+
+The three-year gap does not, and it is not a seed artefact: across 20 randomisations
+r ranges −0.399 to −0.326 and p < 0.05 in 20 of 20. It is carried by one interval:
+
+| Survey pair | Sites | r | p |
+|---|---:|---:|---:|
+| Palm 2009 → 2012 | 30 | −0.397 | 0.030 |
+| Whitsunday 2009 → 2012 | 41 | −0.501 | 0.0008 |
+| Whitsunday 2014 → 2017 | 41 | −0.228 | 0.151 |
+
+A negative correlation of that size is a reversal: sites above their predicted density
+in 2009 sat below it in 2012, and the other way round. Something moved sites
+differentially inside that interval and the model has no term for it — a
+region-specific year trend cannot supply one, because it shifts every site in a region
+by the same amount. Cyclone exposure is recorded at survey points only, so a
+disturbance falling inside a three-year gap is invisible to the covariate. Naming a
+particular storm would be inference this dataset cannot support.
+
+## Table 14 — Multiplicity within hypothesis families (Step 5)
+
+Model A reports 17 tests. One correction across all 17 would be the wrong instrument,
+since they answer four different questions. Holm within each of the four hypothesis
+families the plan set out in advance.
+
+| Family | Term | p | p (Holm) | Survives |
+|---|---|---:|---:|---|
+| H1/Q3 management | NTR 1987 | 0.210 | 0.420 | no |
+| H1/Q3 management | NTR 2004 | 0.863 | 0.863 | no |
+| H1/Q3 management | REGION × NTR 1987 | 0.0004 | **0.0014** | **yes** |
+| H1/Q3 management | REGION × NTR 2004 | 0.0007 | **0.0020** | **yes** |
+| H2 habitat | s(rugosity) | 0.097 | 0.291 | no |
+| H2 habitat | s(LHC) | 0.375 | 0.375 | no |
+| H2 habitat | depth | 0.099 | 0.291 | no |
+| H3 environment | s(maxDHW) | <0.0001 | **<0.0001** | **yes** |
+| H3 environment | s(kd490) | 0.014 | **0.027** | **yes** |
+| H3 environment | s(Cyclone) | 0.078 | 0.078 | no |
+| H4 site variation | s(SITE) | <0.0001 | **<0.0001** | **yes** |
+
+Q3 — the region-by-protection interaction — clears the correction by an order of
+magnitude. The NTR main effects do not, but those are the Palm estimates, which were
+already null; a null that fails a multiplicity correction is still a null.
+
+Nothing in the habitat family survives, which agrees with the within-between split in
+table 10.
+
+The environment family is where the two corrections part company. The thermal term
+survives Holm *and* the unconditional interval in table 8. Cyclone exposure survives
+neither. Turbidity survives Holm but not the interval, so it is reported as unresolved
+— when two defensible corrections disagree, the weaker reading is the one to quote.
+
+The year-trend smooths are in no family: they are adjustment terms rather than
+hypotheses.

@@ -100,7 +100,7 @@ say("A ratio of 2 means twice the density. The interval is 95% Wald.\n")
 
 # build contrast vectors against the fitted coefficient names
 rr <- function(m, region, level) {
-  b <- coef(m); V <- vcov(m); k <- rep(0, length(b)); nm <- names(b)
+  b <- coef(m); V <- vcov(m, unconditional = TRUE); k <- rep(0, length(b)); nm <- names(b)
   main <- paste0("NTR", level)
   if (!(main %in% nm)) stop("coefficient not found: ", main)
   k[match(main, nm)] <- 1
@@ -228,6 +228,15 @@ say("CHANGED the habitat, habitat is a mediator and adjusting for it would remov
 say("part of the effect being measured. For coral trout over this period the first")
 say("is far more plausible, so Step 2 adjusts. Recorded here so the choice is not")
 say("revisited after seeing which way the coefficient moves.")
+
+# Record the environment. mgcv ships with R but its version tracks the R
+# version, and REML fitting and the nb() family have both changed across
+# releases, so "no packages required" is not the same as "no versions to
+# reconcile". Anyone reproducing these numbers needs to know what produced them.
+say("\n", strrep("-", 70))
+say("environment: ", R.version.string, " | mgcv ", as.character(packageVersion("mgcv")),
+    " | platform ", R.version$platform)
+say(strrep("-", 70))
 
 writeLines(log_lines, file.path(OUT, "stage2_step1_log.txt"))
 cat("\nDone. Outputs in ", OUT, "/\n", sep = "")

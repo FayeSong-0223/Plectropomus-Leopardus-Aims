@@ -345,5 +345,14 @@ write.csv(d[, c("SITE","REGION","YEAR","NTR","EXPOSURE","lat_dd","long_dd",
           file.path(OUT, "analysis_dataset.csv"), row.names = FALSE)
 say("wrote table1_design_summary.csv, table2_covariate_variance_structure.csv, analysis_dataset.csv")
 
+# Record the environment. mgcv ships with R but its version tracks the R
+# version, and REML fitting and the nb() family have both changed across
+# releases, so "no packages required" is not the same as "no versions to
+# reconcile". Anyone reproducing these numbers needs to know what produced them.
+say("\n", strrep("-", 70))
+say("environment: ", R.version.string, " | mgcv ", as.character(packageVersion("mgcv")),
+    " | platform ", R.version$platform)
+say(strrep("-", 70))
+
 writeLines(log_lines, file.path(OUT, "audit_log.txt"))
 cat("\nDone. Outputs in ", OUT, "/\n", sep = "")

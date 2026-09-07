@@ -15,20 +15,19 @@ Smooth basis dimension is held to k = 5 throughout. Palm has only six survey
 years, so anything larger invites a wiggly fit the data cannot support.
 Effective degrees of freedom are reported so over-fitting is visible.
 
-Model A: theta 5.96 | deviance explained 60.2% | REML 1197.2 | n = 467
-Model B: theta 5.93 | deviance explained 60.5% | REML 1188.5 | n = 467
+Model A: theta 5.96 | deviance explained 60.2% | REML 1197.4 | n = 467
+Model B: theta 5.93 | deviance explained 60.5% | REML 1188.7 | n = 467
 
 -- Model A, smooth terms --
                              edf  Ref.df  Chi.sq p-value
-s(YEAR):REGIONPalm        3.4616  3.8078 32.2804  0.0000
-s(YEAR):REGIONWhitsunday  1.3425  1.5733  5.9768  0.0217
-s(rugosity)               2.0668  2.5341  5.3120  0.0970
-s(LHC)                    2.6553  3.1591  2.7227  0.3749
-s(depth)                  1.0048  1.0068  2.7030  0.1000
-s(kd490)                  2.6846  3.1410 11.1546  0.0136
-s(maxDHW)                 3.4784  3.7747 38.8689  0.0000
-s(Cyclone)                1.8059  2.0791  5.2542  0.0777
-s(SITE)                  36.3334 62.0000 88.2311  0.0000
+s(YEAR):REGIONPalm        3.4617  3.8078 32.2807  0.0000
+s(YEAR):REGIONWhitsunday  1.3425  1.5733  5.9770  0.0217
+s(rugosity)               2.0669  2.5341  5.3115  0.0971
+s(LHC)                    2.6552  3.1591  2.7232  0.3748
+s(kd490)                  2.6847  3.1410 11.1560  0.0136
+s(maxDHW)                 3.4784  3.7747 38.8686  0.0000
+s(Cyclone)                1.8059  2.0791  5.2543  0.0776
+s(SITE)                  36.3363 62.0000 88.2478  0.0000
 
 edf near 1 means the fitted relationship is effectively a straight line.
 A smooth whose edf collapses to 1 and whose p-value is large is doing nothing.
@@ -37,99 +36,149 @@ A smooth whose edf collapses to 1 and whose p-value is large is doing nothing.
 
 Standard deviations and 0.95 confidence intervals:
 
-                            std.dev        lower        upper
-s(YEAR):REGIONPalm       3.49905541 8.816166e-01 1.388743e+01
-s(YEAR):REGIONWhitsunday 0.30893873 7.786074e-04 1.225819e+02
-s(rugosity)              1.07338615 7.058142e-02 1.632381e+01
-s(LHC)                   0.94496824 8.286333e-02 1.077636e+01
-s(depth)                 0.03108885 1.330972e-21 7.261736e+17
-s(kd490)                 2.31933319 6.491229e-01 8.287038e+00
-s(maxDHW)                4.80805084 7.912630e-01 2.921577e+01
-s(Cyclone)               2.53971442 4.209431e-01 1.532309e+01
-s(SITE)                  0.30650113 2.200093e-01 4.269953e-01
+                           std.dev        lower       upper
+s(YEAR):REGIONPalm       3.4991088 0.8817514125  13.8857305
+s(YEAR):REGIONWhitsunday 0.3089203 0.0007788441 122.5299646
+s(rugosity)              1.0734033 0.0706041225  16.3190859
+s(LHC)                   0.9449581 0.0828942421  10.7721101
+s(kd490)                 2.3193700 0.6491833109   8.2865301
+s(maxDHW)                4.8079005 0.7914700977  29.2062929
+s(Cyclone)               2.5396916 0.4209356792  15.3230852
+s(SITE)                  0.3065029 0.2200194714   0.4269806
 
-Rank: 9/9
-                            std.dev        lower        upper
-s(YEAR):REGIONPalm       3.49905541 8.816166e-01 1.388743e+01
-s(YEAR):REGIONWhitsunday 0.30893873 7.786074e-04 1.225819e+02
-s(rugosity)              1.07338615 7.058142e-02 1.632381e+01
-s(LHC)                   0.94496824 8.286333e-02 1.077636e+01
-s(depth)                 0.03108885 1.330972e-21 7.261736e+17
-s(kd490)                 2.31933319 6.491229e-01 8.287038e+00
-s(maxDHW)                4.80805084 7.912630e-01 2.921577e+01
-s(Cyclone)               2.53971442 4.209431e-01 1.532309e+01
-s(SITE)                  0.30650113 2.200093e-01 4.269953e-01
+Rank: 8/8
+                           std.dev        lower       upper
+s(YEAR):REGIONPalm       3.4991088 0.8817514125  13.8857305
+s(YEAR):REGIONWhitsunday 0.3089203 0.0007788441 122.5299646
+s(rugosity)              1.0734033 0.0706041225  16.3190859
+s(LHC)                   0.9449581 0.0828942421  10.7721101
+s(kd490)                 2.3193700 0.6491833109   8.2865301
+s(maxDHW)                4.8079005 0.7914700977  29.2062929
+s(Cyclone)               2.5396916 0.4209356792  15.3230852
+s(SITE)                  0.3065029 0.2200194714   0.4269806
 
 ======================================================================
 3. IS THE PROTECTION EFFECT STABLE?
 ======================================================================
 The estimate is worth little if it moves with every change of specification.
-Four models are compared, from the Step 1 baseline to the fully adjusted fits.
+Five models are compared, from the Step 1 baseline to the fully adjusted fits.
+
+The first rung is the Step 1 model exactly as Step 1 fitted it, with no depth
+term, so that its numbers reproduce table 3 rather than merely resembling them.
+Depth enters as its own rung, because it moves the Whitsunday estimate more
+than any other single covariate and that should be visible rather than folded
+into a baseline.
 
                               model     region protection ratio   lo   hi
-1               1 baseline (Step 1)       Palm   NTR 1987  1.17 0.83 1.64
-5                       2 + habitat       Palm   NTR 1987  1.29 0.94 1.77
-9  3 + environment, smooth year (A)       Palm   NTR 1987  1.26 0.88 1.80
-13      4 region-year saturated (B)       Palm   NTR 1987  1.27 0.89 1.82
-3               1 baseline (Step 1)       Palm   NTR 2004  0.96 0.54 1.72
-7                       2 + habitat       Palm   NTR 2004  1.18 0.68 2.03
-11 3 + environment, smooth year (A)       Palm   NTR 2004  0.95 0.54 1.67
-15      4 region-year saturated (B)       Palm   NTR 2004  0.95 0.54 1.66
-2               1 baseline (Step 1) Whitsunday   NTR 1987  3.59 2.56 5.04
-6                       2 + habitat Whitsunday   NTR 1987  3.12 2.24 4.32
-10 3 + environment, smooth year (A) Whitsunday   NTR 1987  3.21 2.28 4.52
-14      4 region-year saturated (B) Whitsunday   NTR 1987  3.23 2.30 4.54
-4               1 baseline (Step 1) Whitsunday   NTR 2004  3.53 2.46 5.05
-8                       2 + habitat Whitsunday   NTR 2004  2.81 1.96 4.04
-12 3 + environment, smooth year (A) Whitsunday   NTR 2004  2.89 1.99 4.19
-16      4 region-year saturated (B) Whitsunday   NTR 2004  2.90 2.00 4.22
+1      1 Step 1 baseline (no depth)       Palm   NTR 1987  1.17 0.83 1.64
+5                         2 + depth       Palm   NTR 1987  1.20 0.86 1.67
+9                       3 + habitat       Palm   NTR 1987  1.29 0.94 1.78
+13 4 + environment, smooth year (A)       Palm   NTR 1987  1.26 0.87 1.82
+17      5 region-year saturated (B)       Palm   NTR 1987  1.27 0.88 1.83
+3      1 Step 1 baseline (no depth)       Palm   NTR 2004  0.96 0.53 1.73
+7                         2 + depth       Palm   NTR 2004  0.97 0.55 1.72
+11                      3 + habitat       Palm   NTR 2004  1.18 0.68 2.05
+15 4 + environment, smooth year (A)       Palm   NTR 2004  0.95 0.54 1.69
+19      5 region-year saturated (B)       Palm   NTR 2004  0.95 0.54 1.67
+2      1 Step 1 baseline (no depth) Whitsunday   NTR 1987  3.59 2.55 5.06
+6                         2 + depth Whitsunday   NTR 1987  3.16 2.22 4.50
+10                      3 + habitat Whitsunday   NTR 1987  3.12 2.24 4.34
+14 4 + environment, smooth year (A) Whitsunday   NTR 1987  3.21 2.25 4.58
+18      5 region-year saturated (B) Whitsunday   NTR 1987  3.23 2.29 4.55
+4      1 Step 1 baseline (no depth) Whitsunday   NTR 2004  3.53 2.46 5.07
+8                         2 + depth Whitsunday   NTR 2004  2.95 2.00 4.36
+12                      3 + habitat Whitsunday   NTR 2004  2.81 1.95 4.06
+16 4 + environment, smooth year (A) Whitsunday   NTR 2004  2.89 1.97 4.23
+20      5 region-year saturated (B) Whitsunday   NTR 2004  2.90 1.99 4.23
 
 ======================================================================
-4. WHERE THE VARIATION SITS
+4. HOW MUCH DOES EACH BLOCK CONTRIBUTE?
 ======================================================================
-Each block contributes a vector of values to the linear predictor. The variance
-of each block is its unique contribution; the pairwise covariances are what the
-blocks share. Variances and covariances together sum exactly to the variance of
-the linear predictor, so nothing is allocated arbitrarily and the answer does
-not depend on the order terms were entered.
+Q2 asks how much of the variation the covariates explain. An earlier version of
+this analysis answered it by decomposing the variance of the linear predictor
+into per-block shares. That answer has been withdrawn, for three reasons found
+on audit and recorded in DECISIONS.md:
 
-term-to-block assignment:
-  Management: NTR, REGION:NTR
-  Habitat: s(rugosity), s(LHC), s(depth)
-  Environment: s(kd490), s(maxDHW), s(Cyclone)
-  Space/time: REGION, s(YEAR):REGIONPalm, s(YEAR):REGIONWhitsunday, EXPOSURE
-  Site (RE): s(SITE)
+  1. It was not invariant to the coding of the factor contrasts. Refitting the
+     identical model under sum-to-zero rather than treatment contrasts moved the
+     management share from 0.481 to 0.391 and space/time from 0.121 to 0.345,
+     with identical fitted values and identical log-likelihood. A quantity that
+     moves when nothing about the fit moves is a property of the parameterisation,
+     not of the data.
+  2. It partitioned only the systematic part. The linear predictor has variance
+     0.533; the negative binomial observation process contributes roughly 0.455
+     more on the same scale. Around half of the variation sat outside the
+     partition and the shares were silently conditional on that.
+  3. The site block used the empirical variance of the shrunken random-effect
+     predictions, 0.048, against an estimated variance component of 0.094. Site
+     was understated by about half, and every other block inflated against it.
 
--- unique contribution of each block (share of linear-predictor variance) --
- Management  Space/time Environment   Site (RE)     Habitat 
-      0.481       0.121       0.109       0.089       0.047 
+What replaces it is a drop-one-block comparison: refit the model without each
+block in turn and record how far deviance explained falls, in percentage points.
+This is invariant to contrast coding, it is a statement about the fitted model
+rather than about total ecological variation, and it can carry an interval.
+It is not additive: blocks share variation, so the drops do not sum to the
+model's deviance explained and should never be presented as shares of it.
 
--- shared components (pairwise covariance / total) --
-       block_1    block_2 shared_share
-18 Environment Space/time        0.038
-3  Environment Management        0.026
-2      Habitat Management        0.016
-16  Management Space/time       -0.012
-8  Environment    Habitat       -0.006
-17     Habitat Space/time        0.006
+deviance explained, full model: 60.2%
+deviance explained, same model without the site random effect: 48.9%
 
-sum of unique shares: 0.847   sum of 2x shared: 0.153
-Positive shared values mean two blocks move together and observation alone
-cannot separate their contributions. Negative values mean they offset.
+bootstrapping 200 site-level resamples (9 model fits each) — this is by far the slow part of the pipeline,
+of the order of half an hour on two cores and a few minutes on eight
+replicates that converged for every model: 200 of 200
+
+-- fall in deviance explained when each block is removed (percentage points) --
+                                                              block
+Management, no site random effect Management, no site random effect
+Site random effect (H4)                     Site random effect (H4)
+Environment (H3)                                   Environment (H3)
+Regional year trends                           Regional year trends
+Habitat (H2)                                           Habitat (H2)
+Wave exposure (confounder)               Wave exposure (confounder)
+Management (H1/Q3)                               Management (H1/Q3)
+                                  dev_expl_drop_pp    lo    hi excludes_zero
+Management, no site random effect            14.09  6.53 18.75          TRUE
+Site random effect (H4)                      11.27  0.24 15.08          TRUE
+Environment (H3)                              4.78  2.11  9.44          TRUE
+Regional year trends                          4.30  1.43  8.35          TRUE
+Habitat (H2)                                  0.42 -0.87  3.08         FALSE
+Wave exposure (confounder)                    0.28 -0.65  1.31         FALSE
+Management (H1/Q3)                           -1.02 -4.46 -0.12          TRUE
+
+These are conditional, non-additive measures of each block's contribution to
+this model. They are not shares of total ecological variation and do not sum
+to anything meaningful. A block whose interval includes zero is not
+distinguishable from a block that contributes nothing.
+
+The management row is the one that repays reading carefully, and it is the
+honest answer to Q2. Protection is fixed for the whole history of a site, so
+in a model that already gives every site its own intercept, management and the
+random effect are competing to explain the same between-site differences.
+Remove management and the random effect simply takes the work over, which is
+why its drop sits at or below zero. That is not evidence of no effect — Step 3
+shows the Whitsunday estimate is stable across every specification — it means
+deviance explained cannot separate the two, and any method that appears to
+separate them is reporting an artefact of how the model was parameterised.
+The last row measures management where it is identifiable: in a model with no
+site random effect at all.
+
+H4 said unexplained site-level variation would be large relative to the
+measured covariates. On these numbers it is: the site random effect is the
+largest single contributor, and no covariate block approaches it.
 
 ======================================================================
 5. FIGURES
 ======================================================================
 wrote fig6_partial_effects.png
-wrote fig7_variance_decomposition.png
+wrote fig7_block_contributions.png
 wrote fig8_protection_stability.png
 
 ======================================================================
 6. DIAGNOSTICS
 ======================================================================
-Model A quantile residuals: mean -0.012 sd 0.962 | Shapiro-Wilk p = 0.588
-region-year mean residuals now range -0.169 to +0.164  (Step 1 range was -0.652 to +0.503)
-sd of region-year mean residuals: 0.091
+Model A quantile residuals: mean -0.015 sd 0.970 | Shapiro-Wilk p = 0.617
+region-year mean residuals now range -0.240 to +0.215  (Step 1 range was -0.652 to +0.503)
+sd of region-year mean residuals: 0.112
 
 ======================================================================
 7. THE THERMAL SMOOTH, INTERROGATED
@@ -148,15 +197,14 @@ n observations above 4 DHW: 41 of 467
 
 -- Model A refitted WITHOUT the Whitsunday 2017 survey (n = 426) --
                              edf  Ref.df  Chi.sq p-value
-s(YEAR):REGIONPalm        1.0006  1.0011  8.5471  0.0035
-s(YEAR):REGIONWhitsunday  2.0886  2.5362  7.6348  0.0299
-s(rugosity)               1.0010  1.0020  4.0202  0.0451
-s(LHC)                    2.3858  2.8764  2.1402  0.4723
-s(depth)                  1.0038  1.0056  2.5759  0.1083
-s(kd490)                  2.6740  3.1419  9.1778  0.0375
-s(maxDHW)                 3.7224  3.9321 38.0185  0.0000
-s(Cyclone)                1.5687  1.8537  2.4515  0.2063
-s(SITE)                  32.6277 62.0000 69.5697  0.0000
+s(YEAR):REGIONPalm        1.0006  1.0012  8.5472  0.0035
+s(YEAR):REGIONWhitsunday  2.0886  2.5362  7.6347  0.0299
+s(rugosity)               1.0004  1.0008  4.0202  0.0450
+s(LHC)                    2.3858  2.8763  2.1406  0.4722
+s(kd490)                  2.6741  3.1420  9.1794  0.0375
+s(maxDHW)                 3.7224  3.9321 38.0174  0.0000
+s(Cyclone)                1.5687  1.8537  2.4513  0.2063
+s(SITE)                  32.6303 62.0000 69.5817  0.0000
 
 s(maxDHW) with 2017    : edf 3.48, p 0.0000
 s(maxDHW) without 2017 : edf 3.72, p 0.0000
@@ -165,3 +213,7 @@ wrote fig9_thermal_sensitivity.png
 
 Read this comparison before quoting any thermal effect. If the curve changes
 shape when one survey is removed, the effect is that survey, not the covariate.
+
+----------------------------------------------------------------------
+environment: R version 4.3.3 (2024-02-29) | mgcv 1.9.1 | platform x86_64-pc-linux-gnu
+----------------------------------------------------------------------

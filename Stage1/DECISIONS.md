@@ -151,3 +151,144 @@ kd490 it is a genuine limitation.
 Verified and unchanged: every headline figure was recomputed independently from the raw
 CSVs by a separate code path, and all 30-plus matched. A clean end-to-end run of all six
 scripts reproduces all 20 tables and logs byte for byte, with no warnings.
+
+---
+
+## Second audit, 2026-09-06
+
+A read-only audit of the whole project against both planning documents. Seven claims
+were tested independently; five held, one held only partly, and one was wrong. What
+follows is what changed as a result. The standing rule still applies: every change
+below was prompted by a defect in method or a mismatch with the data, none by an
+effect estimate.
+
+**Withdrawn — the variance decomposition answering Q2.** The reported figure was
+"management explains 48.1% of the variation". Three faults, any one of which is
+disqualifying:
+
+1. It was not invariant to how the factor contrasts were coded. Refitting the
+   identical model under sum-to-zero rather than treatment contrasts moved management
+   from 0.481 to 0.391 and space/time from 0.121 to 0.345, with identical fitted
+   values and identical log-likelihood. A number that moves when nothing about the fit
+   moves describes the parameterisation, not the data.
+2. It partitioned the systematic part only. The linear predictor has variance 0.533;
+   the negative binomial observation process contributes about 0.455 more on the same
+   scale. Roughly half the variation was outside the partition and the shares were
+   silently conditional on that.
+3. The site block used the empirical variance of the shrunken random-effect
+   predictions, 0.048, against an estimated variance component of 0.094. Site was
+   understated by about half and every other block inflated against it.
+
+The report had carried a caveat on this number, but it gave a different and less
+serious reason than any of the above. `table5_variance_decomposition.csv` and the old
+figure 7 are gone.
+
+**Replaced by a drop-one-block comparison.** Each block is removed in turn and the
+fall in deviance explained recorded in percentage points, with a 95% interval from a
+cluster bootstrap over sites (200 resamples, indices drawn under a fixed seed so the
+result does not depend on core count). This is invariant to contrast coding, it is a
+statement about the fitted model rather than about total ecological variation, and it
+carries uncertainty. It is not additive and is never presented as shares.
+
+The result is more informative than the number it replaces. Management, dropped from
+the full model, produces no fall at all — protection is fixed for a site's whole
+history, so the site random effect simply takes over its work. Dropped from a model
+with no random effect, where it is identifiable, management gives the largest drop of
+any block. Both are reported. The site random effect is the largest contributor among
+the terms that can be separated, which is H4 supported.
+
+**Environmental intervals were too narrow.** Every interval in the project used
+`vcov(m)`, which treats the smoothing parameters as known. With
+`vcov(m, unconditional = TRUE)`, rugosity (1.27, 0.98–1.64), turbidity (0.75,
+0.55–1.01) and cyclone exposure (0.85, 0.67–1.06) all cease to exclude 1. Only the
+thermal term survives, at 0.68 (0.48–0.96). The unconditional matrix is now used
+everywhere, including for protection, where it widens the Whitsunday interval from
+2.28–4.52 to 2.25–4.58 and changes nothing.
+
+**"Survives every check" was not true of Palm.** The sheltered-only restriction gives
+Palm NTR 1987 as 0.47 (0.24–0.93) — significantly *below* 1, where every other
+specification gives 1.1 to 1.4. Section 10 of the plan set the rule in advance: "If it
+agrees with the adjusted estimate, say so. If it does not, distrust the adjusted one."
+That rule was not applied. The report noted the anomaly in its sensitivity section
+while its summary still claimed the contrast survived everything, and the README's
+"excludes 1?" column recorded "no" for a row that does exclude 1. Corrected in both.
+The Whitsunday result is unaffected: it survives the restriction at 2.58 (1.56–4.25).
+
+**Two published values for one model.** Step 2's protection ladder labelled its first
+rung "baseline (Step 1)" but included a depth term that Step 1 did not have. Table 3
+therefore gave Whitsunday NTR 1987 as 3.59 and table 4 gave 3.16 for what was named as
+the same model. The ladder now starts with the Step 1 model exactly as Step 1 fits it,
+and depth enters as its own rung — which also makes visible that depth moves the
+estimate more than any other single covariate.
+
+**Keppel 2021 miscounted.** The data question sent to researchers said legal density
+exceeds total density in 18 rows. It is 17, at ratios of 2.1 to 6.8, all in Keppel
+2021. The 18th row is Whitsunday 2018 site HY3, where legal exceeds total by 0.0018 —
+a rounding artefact in a different region-year, and not part of the same phenomenon.
+The comparison range is 1.10–2.17 kg, not 1.11–2.17.
+
+**Stage 1 note rugosity.** The note still quoted Whitsunday rugosity moving 3.63 to
+3.77 between 2016 and 2017. The correct values, 3.58 and 3.72, had been fixed in the
+report months earlier and never propagated. Fixed.
+
+**The environment is now recorded.** Every log carries R version, mgcv version and
+platform. "No packages are required" was true and misleading: mgcv ships with R, but
+its version tracks the R version, and REML fitting and the `nb()` family have both
+changed across releases.
+
+### Newly run, never previously checked
+
+**Excess zeros.** The plan flagged Palm's concentrated zeros in section 8 and no
+distributional check ever followed. Tested by parametric bootstrap from the fitted
+model: 52 zeros observed against a simulated median of 35 (95% interval 25–46,
+p = 0.004). Palm alone p = 0.009, Whitsunday p = 0.062. The excess is real and is a
+stated limitation. It does not drive the result — a zero excess inflates apparent
+overdispersion, which widens intervals rather than narrowing them, and trimming the
+one site that is mostly zeros leaves Whitsunday at 3.27 (2.31–4.63) against 3.21.
+
+**Temporal autocorrelation within sites, and it is not clean.** The model gives each
+site a random intercept and nothing had tested whether that is enough. Pairs are
+binned by the true gap in years, because the survey years are unequally spaced and
+pairing consecutive surveys would call a one-year gap and a three-year gap the same
+thing. Ten of eleven gaps sit at or above the correlation a site random intercept
+induces mechanically (about −0.18 here). The three-year gap does not: r = −0.376,
+significant under all 20 randomisations, carried by the 2009-to-2012 interval in both
+regions. A reversal of that size means something moved sites differentially between
+those surveys and the model has no term for it. This is the cyclone limitation made
+concrete: exposure is recorded at survey points, so a disturbance falling inside a
+three-year gap is invisible to the covariate. Reported as a limitation and added to
+the questions for anyone holding track data. Naming a particular storm would be
+inference this dataset cannot support.
+
+**Multiplicity.** Model A reports 17 tests and no p-value quoted anywhere in this
+project had been adjusted. One correction across all 17 would be the wrong instrument,
+since those tests answer four different questions. Holm within each of the plan's four
+hypothesis families instead. Q3 — the region-by-protection interaction — clears it by
+an order of magnitude (adjusted p = 0.0014 and 0.0020). Nothing in the habitat family
+survives. In the environment family the thermal term survives both this and the
+unconditional interval; cyclone exposure survives neither; turbidity survives Holm but
+not the interval, so it is reported as unresolved. Where two corrections disagree, the
+weaker reading is the one quoted.
+
+### Deliberately not changed
+
+*The figure and table count.* Section 11 of the plan specifies six figures and two
+tables and says to cut any figure that does not answer one of the four questions. The
+project has sixteen figures and fourteen tables. Every addition since has been a
+diagnostic or a correction rather than a new result, and removing the evidence for a
+correction to make a count would be the wrong trade. Recorded as a deviation rather
+than defended as compliance.
+
+*The protection estimate itself.* Nothing about the Whitsunday result changed under
+any of the above: not the unconditional intervals, not the multiplicity correction,
+not the zero-count trimming, not the corrected baseline ladder. It was not adjusted to
+keep it that way; it simply did not move.
+
+### What the audit got wrong
+
+One claim tested did not hold. Outputs were said not to match the current scripts. A
+clean run from an empty `outputs/` reproduces every log, table and figure byte for
+byte, so the scripts and their outputs are consistent. What was true is narrower and
+was found separately: the copies committed to the repository for steps 2 and 3 predate
+the depth respecification, so the repository — not the pipeline — was carrying stale
+logs. Fixed by committing a complete regenerated set.

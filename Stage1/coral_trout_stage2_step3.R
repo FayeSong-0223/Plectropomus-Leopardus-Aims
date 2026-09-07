@@ -67,7 +67,7 @@ fitA <- function(dat, form = FORM)
 
 rr <- function(m, region, level) {
   if (is.null(m)) return(c(NA, NA, NA))
-  b <- coef(m); V <- vcov(m); nm <- names(b); k <- rep(0, length(b))
+  b <- coef(m); V <- vcov(m, unconditional = TRUE); nm <- names(b); k <- rep(0, length(b))
   main <- paste0("NTR", level); if (!main %in% nm) return(c(NA, NA, NA))
   k[match(main, nm)] <- 1
   ix <- paste0("REGIONWhitsunday:NTR", level)
@@ -157,7 +157,7 @@ mPalm <- fitA(droplevels(d[d$REGION == "Palm", ]), FORM_R)
 mWhit <- fitA(droplevels(d[d$REGION == "Whitsunday", ]), FORM_R)
 rr1 <- function(m, level) {
   if (is.null(m)) return(c(NA, NA, NA))
-  b <- coef(m); V <- vcov(m); nm <- names(b); j <- match(paste0("NTR", level), nm)
+  b <- coef(m); V <- vcov(m, unconditional = TRUE); nm <- names(b); j <- match(paste0("NTR", level), nm)
   if (is.na(j)) return(c(NA, NA, NA))
   se <- sqrt(V[j, j]); unname(c(exp(b[j]), exp(b[j] - 1.96 * se), exp(b[j] + 1.96 * se)))
 }
@@ -259,6 +259,15 @@ for (reg in c("Palm", "Whitsunday")) {
                       adj = 1, cex = 0.6, col = RED)
 }
 dev.off(); say("wrote fig11_protection_all_specs.png")
+
+# Record the environment. mgcv ships with R but its version tracks the R
+# version, and REML fitting and the nb() family have both changed across
+# releases, so "no packages required" is not the same as "no versions to
+# reconcile". Anyone reproducing these numbers needs to know what produced them.
+say("\n", strrep("-", 70))
+say("environment: ", R.version.string, " | mgcv ", as.character(packageVersion("mgcv")),
+    " | platform ", R.version$platform)
+say(strrep("-", 70))
 
 writeLines(log_lines, file.path(OUT, "stage2_step3_log.txt"))
 cat("\nDone. Outputs in ", OUT, "/\n", sep = "")

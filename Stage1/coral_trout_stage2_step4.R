@@ -76,7 +76,10 @@ eff_range <- function(m, v, dat, lo = 0.10, hi = 0.90) {
   nd <- dat[c(1, 1), ]; nd[[v]] <- as.numeric(q)
   X  <- predict(m, newdata = nd, type = "lpmatrix")
   dX <- X[2, ] - X[1, ]
-  est <- sum(dX * coef(m)); se <- sqrt(as.numeric(t(dX) %*% vcov(m) %*% dX))
+  est <- sum(dX * coef(m))
+  # Unconditional: includes uncertainty in the smoothing parameters. Three of the
+  # four intervals that excluded 1 under the conditional matrix no longer do.
+  se  <- sqrt(as.numeric(t(dX) %*% vcov(m, unconditional = TRUE) %*% dX))
   c(from = q[[1]], to = q[[2]], ratio = exp(est),
     lo = exp(est - 1.96 * se), hi = exp(est + 1.96 * se))
 }
@@ -97,7 +100,7 @@ say("effect across the range the data actually cover.")
 
 # protection, for comparison, on the same scale
 rr <- function(m, region, level) {
-  b <- coef(m); V <- vcov(m); nm <- names(b); k <- rep(0, length(b))
+  b <- coef(m); V <- vcov(m, unconditional = TRUE); nm <- names(b); k <- rep(0, length(b))
   k[match(paste0("NTR", level), nm)] <- 1
   ix <- paste0("REGIONWhitsunday:NTR", level)
   if (region == "Whitsunday") k[match(ix, nm)] <- 1
@@ -365,6 +368,15 @@ points(mund$ratio, ord, pch = 19, col = col, cex = 1.1)
 legend("bottomleft", legend = c("within site (what Q4 asks)", "between sites"),
        col = c(TEAL, "grey55"), lwd = 2.2, pch = 19, bty = "n", cex = 0.74, text.col = "grey20")
 dev.off(); say("\nwrote fig14_within_between_habitat.png")
+
+# Record the environment. mgcv ships with R but its version tracks the R
+# version, and REML fitting and the nb() family have both changed across
+# releases, so "no packages required" is not the same as "no versions to
+# reconcile". Anyone reproducing these numbers needs to know what produced them.
+say("\n", strrep("-", 70))
+say("environment: ", R.version.string, " | mgcv ", as.character(packageVersion("mgcv")),
+    " | platform ", R.version$platform)
+say(strrep("-", 70))
 
 writeLines(log_lines, file.path(OUT, "stage2_step4_log.txt"))
 cat("\nDone. Outputs in ", OUT, "/\n", sep = "")
