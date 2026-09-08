@@ -10,15 +10,22 @@
 #
 #  No habitat or environmental covariates yet, and no smooth terms. The
 #  purpose of this step is to establish that the model machinery is sound
-#  and the diagnostics are clean BEFORE anything interesting goes in, and
-#  to see whether the protection x region pattern in Figure 2 survives
-#  adjustment for wave exposure.
+#  before anything interesting goes in, and to see whether the protection
+#  x region pattern in Figure 2 survives adjustment for wave exposure.
+#
+#  NOTE, added later: the diagnostics run here are residual-distribution
+#  checks only. They did not establish that the diagnostics are clean.
+#  Step 5 subsequently found excess zeros relative to what the model
+#  generates, an unresolved residual-correlation signal, concurvity above
+#  0.9 for two smooths, and basis-dimension warnings. Read this step as
+#  "the machinery works and the residuals are not obviously wrong", not
+#  as a clean bill of health.
 #
 #  Dependencies: mgcv only, which ships with every R installation.
 #  gam() with bs = "re" fits the random effect by REML, so this is a
 #  mixed model in the usual sense rather than a smoothing device.
 #
-#  Run:  Rscript coral_trout_stage2_model.R    (from the project directory)
+#  Run:  Rscript coral_trout_stage2_step1.R    (from the project directory)
 #  Requires: outputs/analysis_dataset.csv, produced by coral_trout_stage1.R
 # =====================================================================
 

@@ -16,9 +16,12 @@ disagree**.
 
 This is a robust association, not a measured effect of protection. Every specification
 tried leaves the Whitsunday estimate where it is, and adjusting for wave exposure or
-restricting to sheltered sites does not weaken it — so wave exposure is not the
-explanation. Reserve placement was not random, though, and no observational check here
-can establish that whatever else distinguishes the zoned sites is innocuous.
+restricting to sheltered sites does not weaken it — so **measured wave exposure did not
+account for the association in these checks**. That is weaker than ruling exposure out:
+`EXPOSURE` is a coarse three-level categorisation and the sheltered stratum is itself
+broad, so residual exposure differences within it are possible. And reserve placement
+was not random, so whatever else distinguishes the zoned sites is not addressed here at
+all.
 
 Every check applied leaves the Whitsunday estimate where it is. Palm does not hold
 together as a null:
@@ -66,15 +69,18 @@ the coding of the factor contrasts, and a deviance drop measured in a model with
 random effect, which conflated management with everything else fixed about a site. Both
 are documented in `DECISIONS.md`.
 
-What is reported instead is a drop-one-block comparison at fixed dispersion —
-descriptive, non-additive, not variance shares — and an exploratory out-of-sample
-comparison. On the first, the **site random effect has the largest point estimate** of
-any block, at 9.76 percentage points of deviance explained; its bootstrap interval
+Two things are reported instead.
+
+**A drop-one-block comparison at fixed dispersion** — descriptive, non-additive, not
+variance shares. On it, the site random effect has the **largest point estimate** of any
+block, at 9.76 percentage points of deviance explained. Its bootstrap interval
 (1.30–12.43) overlaps those of environment (1.03–6.51) and the regional year trends
-(1.13–5.79), so the ordering among blocks is not established and only the point estimate
-is highest. H4 is supported in direction rather than demonstrated as a ranking. That second one predicts **individual site-year counts at sites the model
-has never seen, marginally over the unknown site effect**. It is exploratory,
-observational and not causal, and stays that way whatever its z.
+(1.13–5.79), so the ordering among blocks is not established — only the point estimate
+is highest. H4 is supported in direction rather than demonstrated as a ranking.
+
+**An exploratory out-of-sample comparison**, which predicts individual site-year counts
+at sites the model has never seen, marginally over the unknown site effect. It is
+exploratory, observational and not causal, and stays that way whatever its z.
 
 Both defects an earlier version of that comparison carried have now been corrected. The
 unseen-site random effect is integrated over rather than set to zero — under a log link
@@ -110,9 +116,11 @@ identity, and it is not causal: a zoning label may predict an unseen site well b
 of what protection does, or because of whatever the zoning process selected for, and
 this analysis cannot tell those apart.
 
-**Habitat does not predict density.** None of rugosity (p = 0.097), live hard coral
-(p = 0.375) or depth (p = 0.099) is significant, and none survives a multiplicity
-correction within the habitat family. Expressed as a magnitude, rugosity briefly
+**No clear association was found for the prespecified habitat variables.** None of
+rugosity (p = 0.097), live hard coral (p = 0.375) or depth (p = 0.099) — the three
+chosen before modelling — is significant, and none survives a multiplicity correction
+within the habitat family. This is a null for those three variables as this extract
+measures them, not a finding that habitat does not predict density. Expressed as a magnitude, rugosity briefly
 appeared to exclude 1 — but splitting it into between-site and within-site components
 shows neither does: 1.28 (0.88–1.85) and 1.13 (0.98–1.31). The pooled estimate looked
 precise only because it averaged two weakly estimated components, and it stops
@@ -165,7 +173,8 @@ unconditional covariance matrix, which admits the uncertainty in the smoothing
 parameters. Under it, rugosity (1.27, 0.98–1.64), turbidity (0.75, 0.55–1.01) and
 cyclone exposure (0.85, 0.67–1.06) all cease to exclude 1. Only the thermal term does,
 at 0.68 (0.48–0.96), and it is the only environmental term to survive the multiplicity
-correction as well.
+correction as well — which makes it the most suggestive of them, not an established
+effect.
 
 **That makes it suggestive, not established**, and three things stand between it and a
 firmer reading. `maxDHW` carries 99% of its variance between region-years, so the term
@@ -199,7 +208,7 @@ sheltered-only restriction.
 
 **Thermal covariates are nearly nested in region-year.** `maxDHW` and `SSTmean` carry
 99% and 98% of their variance between region-years, so they rest on about a dozen
-contrasts. `Cyclone` carries 18% and is much better identified. Concurvity puts a
+contrasts. `Cyclone` carries 18%, so it is better positioned than the thermal terms — a statement about where its variance sits, not a guarantee that it is well estimated. Concurvity puts a
 number on the consequence: `s(maxDHW)` has worst-case concurvity 0.951 and `s(kd490)`
 0.926 against the region-specific year trends, so their coefficients are one possible
 split of shared variation rather than independently identified effects.
@@ -243,9 +252,16 @@ Rscript coral_trout_stage2_step4.R
 Rscript coral_trout_stage2_step5.R
 ```
 
-Run from the project directory, with the two source CSVs in `data/`. A clean
-end-to-end run from an empty `outputs/` reproduces every table, log and figure byte for
-byte, verified by running it twice from empty.
+Run from the project directory, with the two source CSVs in `data/`. The numerical
+outputs were verified across **two independent clean runs** from an empty `outputs/`,
+which produced byte-identical tables, logs and figures; Step 2 was verified the same way
+again after its cross-validation was corrected.
+
+One qualification. Descriptive wording inside the scripts has been revised since those
+runs without rerunning them, and the matching lines of the committed logs were edited in
+step with the scripts. So the current *text* of the logs has not itself been re-verified
+byte for byte against a fresh run. Those edits were prose only — the log diffs contain no
+numeric token — and every number in the logs remains the output of the verified runs.
 
 Two steps are slow. Step 2 bootstraps 200 site-level resamples at seven model fits each
 and then cross-validates over ten site-blocked folds; Step 5 simulates and refits 300
@@ -283,10 +299,10 @@ and turned up three diagnostics that had never been run. All of it is in
 - What survey area underlies the density values, and is the 2018 change in scaling
   convention intentional?
 - Is external cyclone track data available, so exposure can be integrated across
-  survey intervals rather than read at survey points? Residuals reverse sign between
-  the 2009 and 2012 surveys in both regions, which says something site-differentiating
-  happened in that gap that the point-sampled covariate cannot see. Track data would
-  settle whether it was a storm.
+  survey intervals rather than read at survey points? Exposure is currently recorded
+  only at survey points, so anything falling between two surveys is invisible to the
+  covariate. Track data would make the integrated analysis the plan originally called
+  for possible; it would not on its own explain any particular residual pattern.
 - For Keppel 2021 (outside this analysis), legal density exceeds total density at 17
   of the 18 sites surveyed, by factors of 2.1 to 6.8, and implied mean weight of legal
   fish is 0.30 kg against 1.10–2.17 kg in every other region-year. Total density

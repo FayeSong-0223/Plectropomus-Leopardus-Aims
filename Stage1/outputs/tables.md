@@ -34,7 +34,7 @@ than in Palm.
 | rugosity | 0.175 | 13 |
 
 Thermal covariates are identified from roughly a dozen contrasts rather than 467
-observations. Cyclone exposure is not, and is much better identified.
+observations. Cyclone exposure is not — it is largely site-level, so better positioned than the thermal terms, which is a statement about where its variance sits rather than a guarantee it is well estimated.
 
 ## Table 3 — Protection effect, Stage 2 Step 1
 
@@ -281,7 +281,10 @@ for anything read off a smooth.
 
 Rugosity, turbidity and cyclone exposure do not exclude 1. Only the thermal term does,
 and it is the only environmental term to survive the multiplicity correction in table 14
-as well. Switching to the unconditional matrix inflates the standard error by 33–42% for
+as well — which makes it the most suggestive of them rather than an established effect.
+It rests on roughly a dozen region-year contrasts, its worst-case concurvity against the
+region-specific year trends is 0.951, and those year smooths carry a basis warning that
+does not clear at k = 6 (table 18). Switching to the unconditional matrix inflates the standard error by 33–42% for
 terms read off a smooth and by about 1% for the parametric protection contrasts, which is
 why the headline result is untouched by the change.
 
@@ -366,7 +369,9 @@ Neither component of either habitat variable excludes 1. The pooled rugosity est
 looked precise only because it averaged two weakly estimated components — and on the
 unconditional covariance matrix the pooled estimate does not exclude 1 either. Q4 asks
 whether the habitat association runs with structural complexity, with live coral cover,
-or with neither. On these estimates: neither.
+or with neither. On these estimates, no clear association is found for either variable —
+which answers Q4 for the two candidates the plan named, and is not a general finding
+about habitat.
 
 ## Table 13 — Goodness-of-fit bootstrap (Step 5)
 

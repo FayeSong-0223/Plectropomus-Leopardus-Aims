@@ -162,6 +162,12 @@ follows is what changed as a result. The standing rule still applies: every chan
 below was prompted by a defect in method or a mismatch with the data, none by an
 effect estimate.
 
+> **SUPERSEDED, twice.** The replacement described in this section was itself replaced
+> — first because it compared deviance across models that each re-estimated theta, then
+> because its "management" figure was measured with the random effect removed. See the
+> third audit below for what stands. The diagnosis of the ORIGINAL fault, recorded here,
+> still holds.
+
 **Withdrawn — the variance decomposition answering Q2.** The reported figure was
 "management explains 48.1% of the variation". Three faults, any one of which is
 disqualifying:
@@ -230,6 +236,12 @@ changed across releases.
 
 ### Newly run, never previously checked
 
+> **PARTLY SUPERSEDED.** The excess is real and the p-value below still stands after the
+> bootstrap was corrected to refit and to redraw the site effects. What no longer stands
+> is the inference drawn from it here: the claim that a zero excess "does not drive the
+> result" was later narrowed to the two sensitivities that were actually run, since no
+> hurdle or zero-inflated model was ever fitted.
+
 **Excess zeros.** The plan flagged Palm's concentrated zeros in section 8 and no
 distributional check ever followed. Tested by parametric bootstrap from the fitted
 model: 52 zeros observed against a simulated median of 35 (95% interval 25–46,
@@ -237,6 +249,12 @@ p = 0.004). Palm alone p = 0.009, Whitsunday p = 0.062. The excess is real and i
 stated limitation. It does not drive the result — a zero excess inflates apparent
 overdispersion, which widens intervals rather than narrowing them, and trimming the
 one site that is mostly zeros leaves Whitsunday at 3.27 (2.31–4.63) against 3.21.
+
+> **SUPERSEDED.** The finding recorded in this paragraph did not survive a correct test.
+> Testing against zero rather than the correlation a site intercept induces, selecting
+> the strongest of eleven gaps after seeing them, and simulating without redrawing the
+> site effects all made it too permissive. It is now unresolved and exploratory, with no
+> mechanism proposed. See the third audit below.
 
 **Temporal autocorrelation within sites, and it is not clean.** The model gives each
 site a random intercept and nothing had tested whether that is enough. Pairs are
@@ -610,3 +628,85 @@ token. Every number in the log remains the output of the two verified runs.
 **A duplicated paragraph was removed from the README.** The Design-problems section
 repeated the point about protection changing within none of the 71 sites, which the Q2
 section already makes and makes better.
+
+---
+
+## Consistency pass, 2026-09-07
+
+Wording only. No R was rerun, no number changed, no method altered. The purpose was to
+make the cautious readings already adopted in one place hold everywhere, and to correct
+descriptions of the analysis that had gone stale as the analysis changed underneath them.
+
+**Conclusions brought into line across all documents.**
+
+*Thermal.* Described as suggestive and consistent with the data, never as established,
+defensible, existing, or "the only environmental effect left standing". Wherever it
+appears it now carries its three limits together: roughly a dozen region-year contrasts,
+worst-case concurvity 0.951 against the region-specific year trends, and the unresolved
+basis warning on those same year smooths.
+
+*Site random effect.* Stated as having the largest point estimate, 9.76 percentage
+points, with the observation that its bootstrap interval overlaps those of environment
+and the regional year trends. H4 is supported in direction; the ordering among blocks is
+not established.
+
+*Q2.* Stated as yielding no unique, assumption-invariant variance share under this
+design — not as impossible by any route. A design with protection varying within sites,
+or external information on how sites were selected for zoning, would change it.
+
+*Wave exposure.* Stated as not accounting for the association in these checks. Not
+"ruled out": EXPOSURE is a coarse three-level categorisation and the sheltered stratum
+is itself broad, so residual exposure differences within it remain possible.
+
+*Habitat.* Stated as no clear association for the three prespecified variables —
+rugosity, live hard coral, depth — as this extract measures them. Not as a finding that
+habitat does not predict density.
+
+**The 2009–2012 residual pattern.** The README no longer says something happened in that
+interval, nor that cyclone track data would settle its cause. The temporal diagnostic is
+unresolved; track data would make the integrated analysis the plan originally called for
+possible, and nothing more.
+
+**Stale descriptions in the scripts, corrected.**
+
+- Step 1's header said its purpose was to establish that the diagnostics are clean. It
+  did not establish that. Step 5 later found excess zeros, an unresolved
+  residual-correlation signal, concurvity above 0.9 for two smooths, and basis warnings.
+  The header now says the machinery works and the residuals are not obviously wrong, and
+  points forward to what Step 5 found. Comment only — the log is unaffected.
+- Step 1's run command named a file that no longer exists. Fixed to
+  `coral_trout_stage2_step1.R`. Comment only.
+- Step 2 asserted that k = 5 was the most the data could support and left it there. k was
+  later tested at 10 and 20 for kd490 and at 6 for the year smooths, and the script now
+  says so and points to table 18.
+- Step 2 described prediction to unseen sites as removing the management/site overlap.
+  It removes the need to *estimate* the held-out site's intercept — that intercept is
+  integrated out rather than fitted alongside management. It does not remove confounding:
+  whatever distinguished the sites selected for zoning is still present in the held-out
+  sites. The script now draws that distinction explicitly.
+
+**Stage 1 Note.** Four wordings corrected. "No dropout bias" became "no attrition-related
+missingness", with the added note that which sites entered the monitoring programme, and
+why, is not visible in this extract. Cyclone exposure "well identified" became "better
+positioned than the thermal terms" — a statement about where its variance sits, not a
+guarantee it is well estimated; the same softening was applied in the README and
+tables.md. Palm's three protection levels "indistinguishable" became "no clear separation
+in raw summaries", with a pointer to the modelling, where Palm turns out unresolved
+rather than null. And the coral-cover/rugosity contrast no longer says the two readings
+cannot both be right: they measure different dimensions of habitat — living tissue and
+physical structure — and thermal mortality removes one while leaving the other standing.
+
+**Reproducibility, stated precisely.** The numerical outputs were verified across two
+independent clean runs producing byte-identical tables, logs and figures, and Step 2 was
+verified that way again after its cross-validation was corrected. Script wording has been
+revised since without rerunning, with the matching log lines edited in step, so the
+current text of the logs has not itself been re-verified byte for byte. The edits are
+prose only — the log diffs contain no numeric token — and every number remains the output
+of the verified runs. This is now said in that form in the README and the report rather
+than as an unqualified byte-for-byte claim.
+
+**Superseded entries above are marked rather than removed**, so the record of what was
+believed and when stays readable. Three carry a note: the second audit's Q2 replacement
+(superseded twice), its temporal-autocorrelation finding (did not survive a correct
+test), and its reading of the zero excess (the excess stands, the inference from it was
+narrowed).

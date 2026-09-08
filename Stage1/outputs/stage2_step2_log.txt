@@ -15,6 +15,12 @@ Smooth basis dimension is held to k = 5 throughout. Palm has only six survey
 years, so anything larger invites a wiggly fit the data cannot support.
 Effective degrees of freedom are reported so over-fitting is visible.
 
+That justification was later tested rather than left as an assertion: Step 5
+refits at k = 10 and k = 20 for kd490 and at k = 6 for the year smooths, the
+largest the survey years allow. The basis warnings do not clear at any of them
+and the protection estimate does not move, so the residual pattern they detect
+is not something a larger basis represents. See table 18.
+
 Model A: theta 5.96 | deviance explained 60.2% | REML 1197.4 | n = 467
 Model B: theta 5.93 | deviance explained 60.5% | REML 1188.7 | n = 467
 
@@ -172,10 +178,12 @@ anything, and they are not shares of total variation.
 ----------------------------------------------------------------------
 The in-sample comparisons above cannot separate management from site identity
 because both are fitted to the same sites. Prediction to a site the model has
-never seen removes that overlap: for an unseen site the random intercept is
-unknown rather than estimated, so it is integrated out, and the question becomes
-whether the fixed effects alone predict a new site's counts any better with
-management in the model than without it.
+never seen removes the need to ESTIMATE that site's intercept: it is unknown
+and integrated out rather than fitted alongside management. That is a different
+thing from removing confounding — whatever distinguished the sites selected for
+zoning is still present in the held-out sites, and the comparison below cannot
+see it. What follows is about prediction, not about identification.
+
 
 Ten folds, split by SITE so that a site is never in both training and test.
 Each model is fitted on the training sites and scored on the held-out sites by
