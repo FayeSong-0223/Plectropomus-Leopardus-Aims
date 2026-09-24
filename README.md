@@ -5,6 +5,8 @@ Ziqi (Faye) Song
 Analysis of AIMS inshore reef monitoring data for *Plectropomus leopardus* on the Palm
 and Whitsunday inshore reefs, 2007–2018.
 
+**Read the report:** [P_leopardus_Report_v1.0.pdf](P_leopardus_Report_v1.0.pdf) (16 pages)
+
 ## Main result
 
 On Whitsunday inshore reefs, sites inside no-take zones hold roughly three times the
@@ -13,7 +15,7 @@ detectable, and the specifications disagree. This is a robust association, not a
 measured effect of protection: reserve placement was not random.
 
 The full results, including what the analysis could not establish, are in the
-**[project write-up](Stage1/README.md)**.
+**[report](P_leopardus_Report_v1.0.pdf)** and the **[project write-up](Stage1/README.md)**.
 
 ## Stages
 

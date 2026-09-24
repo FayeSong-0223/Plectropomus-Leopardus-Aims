@@ -49,9 +49,9 @@ dataset lists it under *Constraints* as "Attribution 3 Australia", that is the
 
 ## Attribution
 
-Material in `Stage1/outputs/` — the figures, summary tables and logs — is derived
-from AIMS data. AIMS requires the following attribution for modified or derived
-material:
+Material in `Stage1/outputs/` — the figures, summary tables and logs — and the
+project report are derived from AIMS data. AIMS requires the following attribution
+for modified or derived material:
 
 > Based on Australian Institute of Marine Science data.
 
@@ -61,7 +61,8 @@ or tables.
 ## What is published, and what is not
 
 **Published.** The six analysis scripts, sixteen figures, the summary tables in
-`Stage1/outputs/tables.md`, the Stage 1 audit log and the five Stage 2 console logs.
+`Stage1/outputs/tables.md`, the Stage 1 audit log, the five Stage 2 console logs, and
+the project report (`P_leopardus_Report_v1.0.pdf`).
 These are results rather than data: every table is an aggregate of about twenty rows
 or fewer, and the logs contain only summary statistics and model output.
 
