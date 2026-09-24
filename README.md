@@ -51,7 +51,9 @@ seconds.
 
 ## Data
 
-The source AIMS extract is **not included in this repository**. See **[DATA.md](DATA.md)**
+The data come from the AIMS dataset *Spatio-temporal dynamics of coral reef fish assemblages on inshore reefs of the Great Barrier Reef*
+([metadata record](https://apps.aims.gov.au/metadata/view/814a0be3-ed85-4a43-87b7-59ece6eb6a05)).
+The source files are **not included in this repository**. See **[DATA.md](DATA.md)**
 for provenance, licence, attribution, and how to place the files to reproduce the
 analysis.
 
@@ -59,5 +61,5 @@ Derived figures and tables are based on Australian Institute of Marine Science d
 
 ## Licence
 
-Code and text: MIT, see [LICENSE](LICENSE). Derived outputs remain subject to the AIMS
-non-commercial terms set out in [DATA.md](DATA.md).
+Code and text: MIT, see [LICENSE](LICENSE). Derived outputs remain subject to the
+dataset's licence (CC BY 3.0 AU) and the attribution set out in [DATA.md](DATA.md).
