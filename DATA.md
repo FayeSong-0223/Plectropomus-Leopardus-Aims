@@ -11,7 +11,8 @@ inshore reef monitoring programme, covering 2007–2018:
 | `Inshore fish site coordinates.csv` | Site coordinates in degrees-decimal-minutes. 112 rows. |
 
 **Neither file is included in this repository.** To reproduce the analysis, place both
-in `Stage1/data/` and run the script from the `Stage1/` directory.
+in `Stage1/data/` and run the scripts from the `Stage1/` directory, starting with
+`coral_trout_stage1.R`.
 
 **Data provenance.** The source extract and associated site-coordinate file used in this project were downloaded directly from publicly available Australian Institute of Marine Science (AIMS) data resources in 2026. No restricted, confidential or privately supplied AIMS data are used in this repository. The source data remain subject to the licence and attribution requirements specified by AIMS for the original dataset.
 
@@ -29,7 +30,7 @@ AIMS also notes that additional terms beyond the Creative Commons licence may ap
 
 ## Attribution
 
-Material in `Stage1/outputs/` — the figures, summary tables and audit log — is derived
+Material in `Stage1/outputs/` — the figures, summary tables and logs — is derived
 from AIMS data. AIMS requires the following attribution for modified or derived
 material:
 
@@ -39,9 +40,10 @@ Please carry this attribution if you reuse the figures or tables.
 
 ## What is published, and what is not
 
-**Published.** The analysis script, three figures, two aggregate summary tables, and
-the console audit log. These are results rather than data: the tables are six and ten
-rows of counts and variance shares, and the log contains only summary statistics.
+**Published.** The six analysis scripts, sixteen figures, the summary tables in
+`Stage1/outputs/tables.md`, the Stage 1 audit log and the five Stage 2 console logs.
+These are results rather than data: every table is an aggregate of about twenty rows
+or fewer, and the logs contain only summary statistics and model output.
 
 **Not published.** The two source CSVs, and `Stage1/outputs/analysis_dataset.csv`.
 
