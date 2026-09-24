@@ -1,5 +1,7 @@
 # Coral trout study — *Plectropomus leopardus*, inshore Great Barrier Reef
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22933039.svg)](https://doi.org/10.5281/zenodo.22933039)
+
 Ziqi (Faye) Song
 
 Analysis of AIMS inshore reef monitoring data for *Plectropomus leopardus* on the Palm
@@ -50,6 +52,15 @@ Rscript coral_trout_stage2_step5.R
 
 Steps 2 and 5 are slow, roughly 50 minutes together on two cores; the rest take
 seconds.
+
+## How to cite
+
+Please cite the archived release on Zenodo:
+
+> Song, Ziqi (Faye). (2026). *What explains variation in Plectropomus leopardus
+> density* (Version v1.0). Zenodo. https://doi.org/10.5281/zenodo.22933039
+
+If you use the data themselves, please also cite the AIMS dataset (see [DATA.md](DATA.md)).
 
 ## Data
 
